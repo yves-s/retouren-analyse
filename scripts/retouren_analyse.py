@@ -1,0 +1,414 @@
+#!/usr/bin/env python3
+"""Retouren-Analyse: deterministische Berechnung aller Kennzahlen und Muster.
+
+Das Script rechnet, die AI interpretiert. Ausgabe ist ein analysis.json,
+aus dem der Report geschrieben wird. Nur Python-Stdlib.
+"""
+
+import argparse
+import csv
+import json
+import sys
+from collections import Counter, defaultdict
+from datetime import datetime, timedelta
+
+# Kanonische Gruende; Normalisierung deckt deutsche ERP-Exporte und Shopify-Enums ab
+REASON_MAP = {
+    "zu klein": "zu_klein",
+    "zu klein / eng": "zu_klein",
+    "size_too_small": "zu_klein",
+    "zu gross": "zu_gross",
+    "zu groß": "zu_gross",
+    "zu gross / weit": "zu_gross",
+    "size_too_large": "zu_gross",
+    "passform": "passform_schnitt",
+    "schnitt gefaellt nicht": "passform_schnitt",
+    "style": "passform_schnitt",
+    "gefaellt nicht": "farbe_optik_gefaellt_nicht",
+    "gefällt nicht": "farbe_optik_gefaellt_nicht",
+    "farbe weicht ab": "farbe_optik_gefaellt_nicht",
+    "color": "farbe_optik_gefaellt_nicht",
+    "entspricht nicht dem foto": "nicht_wie_beschrieben",
+    "entspricht nicht der beschreibung": "nicht_wie_beschrieben",
+    "not_as_described": "nicht_wie_beschrieben",
+    "defekt": "qualitaet_defekt",
+    "mangelhafte qualitaet": "qualitaet_defekt",
+    "mangelhafte qualität": "qualitaet_defekt",
+    "defective": "qualitaet_defekt",
+    "beschaedigt angekommen": "transportschaden",
+    "beschädigt angekommen": "transportschaden",
+    "transportschaden": "transportschaden",
+    "falscher artikel": "falscher_artikel",
+    "wrong_item": "falscher_artikel",
+    "zu spaet geliefert": "zu_spaet_geliefert",
+    "zu spät geliefert": "zu_spaet_geliefert",
+    "nicht mehr benoetigt": "reue_nicht_benoetigt",
+    "nicht mehr benötigt": "reue_nicht_benoetigt",
+    "unwanted": "reue_nicht_benoetigt",
+    "nicht abgeholt": "nicht_abgeholt_annahme_verweigert",
+    "annahme verweigert": "nicht_abgeholt_annahme_verweigert",
+    "unknown": "sonstiges_unbekannt",
+    "other": "sonstiges_unbekannt",
+    "": "sonstiges_unbekannt",
+}
+
+SIZE_REASONS = {"zu_klein", "zu_gross"}
+CONTENT_REASONS = {"nicht_wie_beschrieben", "farbe_optik_gefaellt_nicht"}
+
+
+def parse_date(value):
+    for fmt in ("%Y-%m-%d", "%d.%m.%Y", "%Y-%m-%dT%H:%M:%S"):
+        try:
+            return datetime.strptime(value.strip()[: len(fmt) + 2], fmt)
+        except (ValueError, AttributeError):
+            continue
+    return None
+
+
+def to_float(value):
+    if value is None or value == "":
+        return 0.0
+    try:
+        return float(str(value).replace(",", "."))
+    except ValueError:
+        return 0.0
+
+
+def month_key(dt):
+    return f"{dt.year:04d}-{dt.month:02d}"
+
+
+def normalize_reason(raw):
+    return REASON_MAP.get((raw or "").strip().lower(), "sonstiges_unbekannt")
+
+
+def read_csv(path):
+    with open(path, newline="", encoding="utf-8-sig") as f:
+        return list(csv.DictReader(f))
+
+
+def analyze(returns_rows, sales_rows, args):
+    assumptions = [
+        f"Prozesskostensatz {args.prozesskosten:.2f} EUR je Retouren-Vorgang (EHI-Kernbereich 5 bis 20 EUR, kalibrierbar)",
+        f"Rueckgabefenster {args.rueckgabefenster} Tage, Reifepuffer {args.reifepuffer} Tage",
+        f"Mindest-N je SKU: {args.min_retouren} Retouren",
+    ]
+    warnings = []
+
+    # ---- Verkaufsbasis indizieren
+    orders = defaultdict(list)          # order -> sale positions
+    sku_sold = Counter()
+    sku_revenue = defaultdict(float)
+    sku_name = {}
+    sku_unit_cost = {}
+    order_month = {}
+    order_payment = {}
+    order_channel = {}
+    customer_orders = defaultdict(set)
+    total_shipped_qty = 0
+    total_shipped_value = 0.0
+
+    for row in sales_rows:
+        oid = row.get("sales_order_number", "").strip()
+        d = parse_date(row.get("order_date", ""))
+        if not oid or d is None:
+            continue
+        qty = to_float(row.get("quantity")) or 1.0
+        rev = to_float(row.get("net_revenue"))
+        sku = row.get("product_number", "").strip()
+        orders[oid].append(row)
+        order_month[oid] = month_key(d)
+        order_payment[oid] = row.get("payment_method", "").strip() or "unbekannt"
+        order_channel[oid] = row.get("channel", "").strip() or "unbekannt"
+        cust = row.get("customer_number", "").strip()
+        if cust:
+            customer_orders[cust].add(oid)
+        sku_sold[sku] += qty
+        sku_revenue[sku] += rev
+        sku_name.setdefault(sku, row.get("product_name", sku))
+        if row.get("unit_cost"):
+            sku_unit_cost[sku] = to_float(row.get("unit_cost"))
+        total_shipped_qty += qty
+        total_shipped_value += rev
+
+    # ---- Retouren durchgehen
+    max_date = None
+    ret_qty_by_cohort = Counter()
+    ret_value_by_cohort = defaultdict(float)
+    orders_with_return = set()
+    sku_returned = Counter()
+    sku_refund = defaultdict(float)
+    sku_return_events = Counter()
+    sku_defect_qty = Counter()
+    reason_counter = Counter()
+    sku_reasons = defaultdict(Counter)
+    style_size_reasons = defaultdict(lambda: defaultdict(Counter))  # style -> size -> reason
+    customer_return_orders = defaultdict(set)
+    customer_return_count = Counter()
+    nonpickup = []
+    defect_by_sku_month = defaultdict(Counter)
+    unmatched_orders = 0
+
+    for row in returns_rows:
+        oid = row.get("sales_order_number", "").strip()
+        d = parse_date(row.get("return_date", ""))
+        if d and (max_date is None or d > max_date):
+            max_date = d
+        qty = to_float(row.get("quantity_returned")) or 1.0
+        sku = row.get("product_number", "").strip()
+        refund = to_float(row.get("refund_amount"))
+        reason = normalize_reason(row.get("return_reason"))
+        rtype = (row.get("return_type", "") or "").strip().lower()
+        if rtype in ("nicht_abgeholt", "annahme_verweigert", "not_picked_up"):
+            reason = "nicht_abgeholt_annahme_verweigert"
+
+        cohort = order_month.get(oid)
+        if cohort is None:
+            unmatched_orders += 1
+        else:
+            ret_qty_by_cohort[cohort] += qty
+            ret_value_by_cohort[cohort] += refund
+            orders_with_return.add(oid)
+
+        sku_returned[sku] += qty
+        sku_refund[sku] += refund
+        sku_return_events[sku] += 1
+        reason_counter[reason] += 1
+        sku_reasons[sku][reason] += 1
+
+        style = row.get("product_name", sku)
+        size = (row.get("variant_size", "") or "").strip()
+        if size and reason in SIZE_REASONS:
+            style_size_reasons[style][size][reason] += 1
+
+        cust = row.get("customer_number", "").strip()
+        if cust:
+            customer_return_orders[cust].add(oid)
+            customer_return_count[cust] += 1
+
+        if reason == "nicht_abgeholt_annahme_verweigert":
+            nonpickup.append({"order": oid, "refund": refund,
+                              "payment": order_payment.get(oid, row.get("payment_method", "unbekannt"))})
+        if reason == "qualitaet_defekt" and d:
+            defect_by_sku_month[style][month_key(d)] += qty
+            sku_defect_qty[sku] += qty
+
+    if unmatched_orders:
+        warnings.append(
+            f"{unmatched_orders} Retouren-Positionen ohne Treffer in der Verkaufsbasis; "
+            "Quoten koennten untererfasst sein (Verkaufs-Export-Zeitraum pruefen)."
+        )
+    today = max_date or datetime.now()
+
+    # ---- Kohorten-Quoten
+    cohort_sold_qty = Counter()
+    cohort_sold_value = defaultdict(float)
+    cohort_orders = Counter()
+    cohort_orders_ret = Counter()
+    for oid, rows in orders.items():
+        ck = order_month[oid]
+        cohort_orders[ck] += 1
+        if oid in orders_with_return:
+            cohort_orders_ret[ck] += 1
+        for r in rows:
+            cohort_sold_qty[ck] += to_float(r.get("quantity")) or 1.0
+            cohort_sold_value[ck] += to_float(r.get("net_revenue"))
+
+    cohorts = []
+    for ck in sorted(cohort_sold_qty):
+        year, month = int(ck[:4]), int(ck[5:7])
+        month_end = datetime(year + (month == 12), (month % 12) + 1, 1)
+        mature = month_end + timedelta(days=args.rueckgabefenster + args.reifepuffer) <= today
+        sold_q, sold_v = cohort_sold_qty[ck], cohort_sold_value[ck]
+        cohorts.append({
+            "kohorte": ck,
+            "beta_quote": round(ret_qty_by_cohort[ck] / sold_q, 4) if sold_q else None,
+            "gamma_quote": round(ret_value_by_cohort[ck] / sold_v, 4) if sold_v else None,
+            "bestell_quote": round(cohort_orders_ret[ck] / cohort_orders[ck], 4) if cohort_orders[ck] else None,
+            "mature": mature,
+        })
+
+    # ---- SKU-Quoten mit Mindest-N
+    sku_rates = []
+    for sku, ret in sku_returned.items():
+        sold = sku_sold.get(sku, 0)
+        entry = {
+            "sku": sku, "name": sku_name.get(sku, sku),
+            "verkauft": sold, "retourniert": ret,
+            "beta_quote": round(ret / sold, 4) if sold else None,
+            "unter_mindest_n": ret < args.min_retouren or sold < 10,
+            "top_gruende": dict(sku_reasons[sku].most_common(3)),
+        }
+        sku_rates.append(entry)
+    sku_rates.sort(key=lambda e: (e["beta_quote"] or 0), reverse=True)
+    rankable = [e for e in sku_rates if not e["unter_mindest_n"]]
+
+    # ---- Groessen-Laeufer
+    size_runners = []
+    for style, sizes in style_size_reasons.items():
+        klein = sum(c["zu_klein"] for c in sizes.values())
+        gross = sum(c["zu_gross"] for c in sizes.values())
+        total = klein + gross
+        if total >= 10 and max(klein, gross) >= 2 * max(1, min(klein, gross)):
+            size_runners.append({
+                "style": style, "zu_klein": klein, "zu_gross": gross,
+                "richtung": "faellt klein aus" if klein > gross else "faellt gross aus",
+                "je_groesse": {s: dict(c) for s, c in sorted(sizes.items())},
+            })
+    size_runners.sort(key=lambda e: e["zu_klein"] + e["zu_gross"], reverse=True)
+
+    # ---- Bracketing
+    bracketing_orders = 0
+    bracketing_with_return = 0
+    for oid, rows in orders.items():
+        by_style = defaultdict(set)
+        for r in rows:
+            size = (r.get("variant_size", "") or "").strip()
+            if size:
+                by_style[r.get("product_name", "")].add(size)
+        if any(len(s) > 1 for s in by_style.values()):
+            bracketing_orders += 1
+            if oid in orders_with_return:
+                bracketing_with_return += 1
+
+    # ---- Serien-Retournierer (Review-Liste, keine Sanktion)
+    serial = []
+    for cust, ret_orders in customer_return_orders.items():
+        n_orders = len(customer_orders.get(cust, set()))
+        rate = len(ret_orders) / n_orders if n_orders else None
+        if (n_orders >= 3 and rate is not None and rate >= 0.4) or customer_return_count[cust] >= 5:
+            serial.append({"kunde": cust, "bestellungen": n_orders,
+                           "bestellungen_mit_retoure": len(ret_orders),
+                           "retouren_positionen": customer_return_count[cust],
+                           "quote": round(rate, 3) if rate is not None else None})
+    serial.sort(key=lambda e: e["retouren_positionen"], reverse=True)
+
+    # ---- Nicht abgeholte Sendungen
+    np_orders = {e["order"] for e in nonpickup if e["order"]}
+    np_value = sum(e["refund"] for e in nonpickup)
+    np_payment = Counter()
+    seen_np = set()
+    for e in nonpickup:
+        if e["order"] and e["order"] not in seen_np:
+            seen_np.add(e["order"])
+            np_payment[e["payment"]] += 1
+    overall_payment = Counter(order_payment.values())
+    nonpickup_block = {
+        "sendungen": len(np_orders),
+        "anteil_an_bestellungen": round(len(np_orders) / len(orders), 4) if orders else None,
+        "anteil_an_retouren_vorgaengen": round(len(np_orders) / len(orders_with_return), 4) if orders_with_return else None,
+        "verlorener_umsatz": round(np_value, 2),
+        "zusatzkosten_versand_annahme": round(len(np_orders) * args.prozesskosten, 2),
+        "zahlart_verteilung_nicht_abgeholt": dict(np_payment),
+        "zahlart_verteilung_alle_bestellungen": dict(overall_payment),
+    }
+
+    # ---- Chargen-Spikes (Defekt-Haeufung in einem Monat, aggregiert je Style)
+    batch_spikes = []
+    for style, months in defect_by_sku_month.items():
+        if len(months) < 2:
+            peak_month, peak = (list(months.items()) or [("", 0)])[0]
+            if peak >= 8:
+                batch_spikes.append({"style": style, "monat": peak_month,
+                                     "defekte": peak, "basis_schnitt": 0})
+            continue
+        peak_month, peak = months.most_common(1)[0]
+        rest = [v for m, v in months.items() if m != peak_month]
+        mean_rest = sum(rest) / len(rest)
+        if peak >= 5 and peak >= 3 * max(mean_rest, 1):
+            batch_spikes.append({"style": style, "monat": peak_month,
+                                 "defekte": peak, "basis_schnitt": round(mean_rest, 1)})
+
+    # ---- Zahlart- und Kanal-Split (Bestellquote)
+    def split_by(mapping):
+        totals, rets = Counter(), Counter()
+        for oid in orders:
+            key = mapping.get(oid, "unbekannt")
+            totals[key] += 1
+            if oid in orders_with_return:
+                rets[key] += 1
+        return {k: {"bestellungen": totals[k], "mit_retoure": rets[k],
+                    "quote": round(rets[k] / totals[k], 4)} for k in totals}
+
+    # ---- Kosten-Attribution je SKU
+    costs = []
+    for sku, events in sku_return_events.items():
+        writeoff = sku_defect_qty.get(sku, 0) * sku_unit_cost.get(sku, 0.0)
+        total = sku_refund[sku] + events * args.prozesskosten + writeoff
+        entry = {"sku": sku, "name": sku_name.get(sku, sku), "retouren_vorgaenge": events,
+                 "erstattungen": round(sku_refund[sku], 2),
+                 "prozesskosten": round(events * args.prozesskosten, 2),
+                 "wertverlust_defekt": round(writeoff, 2),
+                 "gesamt": round(total, 2)}
+        if sku in sku_unit_cost and sku_sold.get(sku):
+            marge_vor = sku_revenue[sku] - sku_sold[sku] * sku_unit_cost[sku]
+            entry["deckungsbeitrag_vor_retouren"] = round(marge_vor, 2)
+            entry["deckungsbeitrag_nach_retouren"] = round(marge_vor - total, 2)
+        costs.append(entry)
+    costs.sort(key=lambda e: e["gesamt"], reverse=True)
+
+    missing = []
+    sample = returns_rows[0] if returns_rows else {}
+    for col, analysis in [("delivered_date", "Wardrobing-Fenster und Latenz ab Zustellung"),
+                          ("batch", "Chargen-Zuordnung exakt (aktuell nur zeitliche Naeherung)"),
+                          ("refund_type", "Revenue-Recovery-Rate (Exchange vs. Refund)"),
+                          ("condition", "Wertverlust real statt Annahme")]:
+        if col not in sample:
+            missing.append({"spalte": col, "entfallene_analyse": analysis})
+
+    return {
+        "meta": {
+            "retouren_positionen": len(returns_rows),
+            "verkaufs_positionen": len(sales_rows),
+            "bestellungen": len(orders),
+            "zeitraum_bis": today.strftime("%Y-%m-%d"),
+            "annahmen": assumptions,
+            "warnungen": warnings,
+            "fehlende_spalten": missing,
+        },
+        "quoten": {
+            "gesamt_beta": round(sum(sku_returned.values()) / total_shipped_qty, 4) if total_shipped_qty else None,
+            "gesamt_gamma": round(sum(sku_refund.values()) / total_shipped_value, 4) if total_shipped_value else None,
+            "gesamt_bestellquote": round(len(orders_with_return) / len(orders), 4) if orders else None,
+            "je_kohorte": cohorts,
+        },
+        "gruende": dict(reason_counter.most_common()),
+        "sku_quoten_top": rankable[:10],
+        "sku_unter_mindest_n": len(sku_rates) - len(rankable),
+        "groessen_laeufer": size_runners[:5],
+        "bracketing": {
+            "bestellungen_mehrgroessen": bracketing_orders,
+            "davon_mit_retoure": bracketing_with_return,
+            "quote": round(bracketing_with_return / bracketing_orders, 4) if bracketing_orders else None,
+        },
+        "serien_retournierer_review": serial[:10],
+        "nicht_abgeholt": nonpickup_block,
+        "chargen_spikes": batch_spikes,
+        "zahlart_split": split_by(order_payment),
+        "kanal_split": split_by(order_channel),
+        "kosten_top": costs[:10],
+    }
+
+
+def main():
+    p = argparse.ArgumentParser(description="Retouren-Analyse (deterministisch)")
+    p.add_argument("--retouren", required=True)
+    p.add_argument("--verkaeufe", required=True)
+    p.add_argument("--out", default="analysis.json")
+    p.add_argument("--prozesskosten", type=float, default=10.0)
+    p.add_argument("--rueckgabefenster", type=int, default=60)
+    p.add_argument("--min-retouren", dest="min_retouren", type=int, default=3)
+    p.add_argument("--reifepuffer", type=int, default=21)
+    args = p.parse_args()
+
+    result = analyze(read_csv(args.retouren), read_csv(args.verkaeufe), args)
+    with open(args.out, "w", encoding="utf-8") as f:
+        json.dump(result, f, ensure_ascii=False, indent=2)
+    print(f"OK: {args.out} geschrieben "
+          f"({result['meta']['retouren_positionen']} Retouren-Positionen, "
+          f"{result['meta']['bestellungen']} Bestellungen)")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
