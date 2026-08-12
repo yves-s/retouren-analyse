@@ -39,8 +39,9 @@ Schreib den Report aus `analysis.json` in dieser Struktur:
    - `export`: direkt aus den Daten belegt (Zahl aus analysis.json)
    - `hypothesis`: plausible Deutung, aus den Daten allein nicht beweisbar
    - `needs_data`: erst mit zusätzlicher Spalte oder Quelle prüfbar
-4. **Maßnahmen:** je bestätigtem Muster die Maßnahmen aus `reference/massnahmen.md`, priorisiert nach Euro-Impact, mit Owner-Vorschlag (Shop, Einkauf, Logistik, Finance).
-5. **Annahmen und fehlende Daten:** alle Default-Annahmen (Prozesskostensatz usw.) und alles, was mit weiteren Spalten möglich würde.
+4. **Was sonst untergegangen wäre:** der Abschnitt `blinde_flecken` aus der Analyse. Das sind Befunde, die ein normaler Retouren-Report strukturell nicht zeigt, etwa ein Scheintrend durch unreife Kohorten, ein Merkmal das erst in der Kreuzung auffällt, oder ein Artikel der brutto verdient und nach Retouren nichts übrig lässt. Je Befund immer beides sagen: was da ist, und warum es im Standard-Report unsichtbar bleibt. Dieser Abschnitt ist der eigentliche Grund, warum jemand die Analyse fährt; schreib ihn nicht als Fußnote.
+5. **Maßnahmen:** je bestätigtem Muster die Maßnahmen aus `reference/massnahmen.md`, priorisiert nach Euro-Impact, mit Owner-Vorschlag (Shop, Einkauf, Logistik, Finance).
+6. **Annahmen und fehlende Daten:** alle Default-Annahmen (Prozesskostensatz usw.) und alles, was mit weiteren Spalten möglich würde.
 
 ## Guardrails (hart)
 

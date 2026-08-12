@@ -347,6 +347,103 @@ def analyze(returns_rows, sales_rows, args):
         costs.append(entry)
     costs.sort(key=lambda e: e["gesamt"], reverse=True)
 
+    # ---- Blinde Flecken: was ohne diese Analyse untergegangen waere
+    # Jeder Eintrag sagt, WAS uebersehen wird und WARUM es der Standard-Report nicht zeigt.
+    blind_spots = []
+
+    # 1. Scheintrend durch unreife Kohorten
+    mature_betas = [c["beta_quote"] for c in cohorts if c["mature"] and c["beta_quote"] is not None]
+    unripe = [c for c in cohorts if not c["mature"] and c["beta_quote"] is not None]
+    if mature_betas and unripe:
+        mature_avg = sum(mature_betas) / len(mature_betas)
+        youngest = unripe[-1]
+        delta = mature_avg - youngest["beta_quote"]
+        if delta > 0.02:
+            blind_spots.append({
+                "titel": "Die Retourenquote sieht aus, als wuerde sie sinken. Tut sie nicht.",
+                "warum_uebersehen": "Wer Retouren eines Monats durch Verkaeufe desselben Monats teilt, misst junge "
+                                    "Bestellungen mit, deren Rueckgabefrist noch laeuft. Der Report zeigt eine "
+                                    "Verbesserung, die nur ein Zeitversatz ist.",
+                "befund": f"Reife Kohorten liegen im Schnitt bei {mature_avg:.1%}, die juengste Kohorte "
+                          f"{youngest['kohorte']} zeigt {youngest['beta_quote']:.1%}. Differenz "
+                          f"{delta:.1%} Punkte, allein durch fehlende Reife.",
+                "unreife_kohorten": [c["kohorte"] for c in unripe],
+            })
+
+    # 2. Teuer trotz unauffaelliger Quote (taucht in keiner Top-Quoten-Liste auf)
+    top_rate_skus = {e["sku"] for e in rankable[:10]}
+    avg_beta = (sum(sku_returned.values()) / total_shipped_qty) if total_shipped_qty else 0
+    hidden_cost = []
+    for c in costs[:15]:
+        if c["sku"] in top_rate_skus:
+            continue
+        sold = sku_sold.get(c["sku"], 0)
+        rate = (sku_returned.get(c["sku"], 0) / sold) if sold else None
+        if rate is not None and rate <= avg_beta * 1.2:
+            hidden_cost.append({"sku": c["sku"], "name": c["name"], "beta_quote": round(rate, 4),
+                                "kosten": c["gesamt"]})
+    if hidden_cost:
+        blind_spots.append({
+            "titel": "Artikel mit normaler Quote, die trotzdem viel Geld kosten",
+            "warum_uebersehen": "Standard-Reports ranken nach Quote. Ein Artikel mit durchschnittlicher Quote, "
+                                "aber hohem Volumen oder Preis faellt dort nie auf, kostet aber mehr als die "
+                                "Ausreisser.",
+            "artikel": hidden_cost[:5],
+        })
+
+    # 3. Segment-Kontrast: unauffaellig gesamt, auffaellig bei nicht abgeholten Sendungen
+    if np_orders and orders:
+        contrasts = []
+        for zahlart, anzahl in np_payment.items():
+            anteil_np = anzahl / len(np_orders)
+            gesamt = overall_payment.get(zahlart, 0)
+            anteil_gesamt = gesamt / len(orders) if orders else 0
+            quote_gesamt = split_by(order_payment).get(zahlart, {}).get("quote")
+            if anteil_gesamt > 0 and anteil_np >= 1.5 * anteil_gesamt and anzahl >= 10:
+                contrasts.append({
+                    "merkmal": zahlart,
+                    "anteil_bei_nicht_abgeholt": round(anteil_np, 4),
+                    "anteil_im_gesamtgeschaeft": round(anteil_gesamt, 4),
+                    "retourenquote_gesamt_unauffaellig": quote_gesamt,
+                })
+        if contrasts:
+            blind_spots.append({
+                "titel": "Ein Merkmal, das erst in der Kreuzung auffaellt",
+                "warum_uebersehen": "In der Gesamtsicht liegen alle Zahlarten dicht beieinander, da ist nichts zu "
+                                    "sehen. Erst wenn man nur die nicht abgeholten Sendungen anschaut, kippt das "
+                                    "Bild deutlich.",
+                "kontraste": contrasts,
+            })
+
+    # 4. Retouren ohne belastbaren Grund
+    unknown = reason_counter.get("sonstiges_unbekannt", 0)
+    total_ret = sum(reason_counter.values())
+    if total_ret and unknown / total_ret >= 0.08:
+        blind_spots.append({
+            "titel": "Ein relevanter Teil der Retouren hat keinen brauchbaren Grund",
+            "warum_uebersehen": "Leere und Sonstiges-Gruende landen im Report als Restposten und werden nicht "
+                                "weiter angeschaut. Dahinter steckt haeufig ein eigener Fall, etwa nicht "
+                                "abgeholte Sendungen oder ein Prozessfehler.",
+            "anteil": round(unknown / total_ret, 4),
+            "anzahl": unknown,
+        })
+
+    # 5. Marge-Falle: Deckungsbeitrag bricht durch Retouren weg
+    margin_traps = [c for c in costs
+                    if c.get("deckungsbeitrag_vor_retouren", 0) > 0
+                    and c.get("deckungsbeitrag_nach_retouren") is not None
+                    and c["deckungsbeitrag_nach_retouren"] < 0.25 * c["deckungsbeitrag_vor_retouren"]]
+    if margin_traps:
+        blind_spots.append({
+            "titel": "Artikel, die brutto verdienen und nach Retouren fast nichts uebrig lassen",
+            "warum_uebersehen": "Retourenkosten stehen in der Regel nicht am Artikel. In der Sortimentsauswertung "
+                                "sieht der Artikel gesund aus.",
+            "artikel": [{"sku": c["sku"], "name": c["name"],
+                         "db_vor_retouren": c["deckungsbeitrag_vor_retouren"],
+                         "db_nach_retouren": c["deckungsbeitrag_nach_retouren"]}
+                        for c in margin_traps[:5]],
+        })
+
     missing = []
     sample = returns_rows[0] if returns_rows else {}
     for col, analysis in [("delivered_date", "Wardrobing-Fenster und Latenz ab Zustellung"),
@@ -372,6 +469,7 @@ def analyze(returns_rows, sales_rows, args):
             "gesamt_bestellquote": round(len(orders_with_return) / len(orders), 4) if orders else None,
             "je_kohorte": cohorts,
         },
+        "blinde_flecken": blind_spots,
         "gruende": dict(reason_counter.most_common()),
         "sku_quoten_top": rankable[:10],
         "sku_unter_mindest_n": len(sku_rates) - len(rankable),
