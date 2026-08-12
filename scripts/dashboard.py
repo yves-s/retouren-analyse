@@ -227,9 +227,9 @@ def build(d, titel):
             <h3>{esc(b["titel"])}</h3>
             <span class="bk-hebel">{esc(b["hebel_text"])}</span>
           </div>
+          {chart_block}
           <div class="bk-body">
             <div class="bk-spalte">
-              {chart_block}
               <p class="mini-lbl">Was in den Daten steht</p>
               <p>{esc(b["was"])}</p>
               <p class="mini-lbl">Warum das zählt</p>
@@ -362,7 +362,8 @@ def build(d, titel):
     font-size: 13.5px; color: var(--gedaempft); }}
   .fuss ul {{ margin: 6px 0 18px; padding-left: 18px; }}
   .leer {{ color: var(--gedaempft); font-size: 14px; }}
-  .bk-chart {{ margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--linie); }}
+  .bk-chart {{ padding: 22px 22px 6px; border-bottom: 1px solid var(--linie); }}
+  .bk-chart .chart {{ max-width: 760px; }}
   .warnung {{ background: var(--moss-flaeche); border-left: 3px solid var(--signal);
     padding: 14px 18px; margin: 10px 0 18px; font-size: 14px; }}
   .chart .val-inv {{ font-size: 12.5px; fill: var(--paper-fest); font-weight: 600; }}
