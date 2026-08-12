@@ -6,7 +6,7 @@
   :root {
     --paper: #FAFAF7; --ink: #083A2A; --serie: #0B6E4F; --moss: #D4EDE0; --signal: #F2653C;
     --bg: var(--paper); --text: var(--ink); --panel: #fff; --linie: rgba(8,58,42,.12);
-    --gedaempft: rgba(8,58,42,.62); --moss-flaeche: #D4EDE0;
+    --gedaempft: rgba(8,58,42,.62); --moss-flaeche: #D4EDE0; --paper-fest: #FAFAF7;
   }
   @media (prefers-color-scheme: dark) {
     :root { --bg: #083A2A; --text: #FAFAF7; --serie: #10A26B;
@@ -74,6 +74,10 @@
     font-size: 13.5px; color: var(--gedaempft); }
   .fuss ul { margin: 6px 0 18px; padding-left: 18px; }
   .leer { color: var(--gedaempft); font-size: 14px; }
+  .bk-chart { margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--linie); }
+  .warnung { background: var(--moss-flaeche); border-left: 3px solid var(--signal);
+    padding: 14px 18px; margin: 10px 0 18px; font-size: 14px; }
+  .chart .val-inv { font-size: 12.5px; fill: var(--paper-fest); font-weight: 600; }
   .glossar { margin: 8px 0 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 4px 28px; font-size: 14px; }
   .glossar dt { font-weight: 600; margin-top: 12px; }
@@ -88,11 +92,18 @@
   <p class="meta">1.308 Retouren-Positionen aus 5.200 Bestellungen ·
      Datenstand 2026-07-05</p>
 
-  <div class="kacheln"><div class="kachel"><div class="klabel">Retouren nach Menge</div><div class="kwert">15,9 %</div><div class="zusatz">Beta-Quote</div></div><div class="kachel"><div class="klabel">Retouren nach Wert</div><div class="kwert">17,7 %</div><div class="zusatz">Gamma-Quote</div></div><div class="kachel"><div class="klabel">Bestellungen mit Retoure</div><div class="kwert">22,4 %</div><div class="zusatz">5.200 Bestellungen</div></div><div class="kachel akzent"><div class="klabel">Retourenkosten der teuersten Artikel</div><div class="kwert">30.552 EUR</div><div class="zusatz">Erstattungen, Bearbeitung, Wertverlust</div></div></div>
+  <div class="kacheln"><div class="kachel"><div class="klabel">Retouren nach Menge</div><div class="kwert">15,9 %</div><div class="zusatz">Beta-Quote</div></div><div class="kachel"><div class="klabel">Retouren nach Wert</div><div class="kwert">17,7 %</div><div class="zusatz">Gamma-Quote</div></div><div class="kachel"><div class="klabel">Bestellungen mit Retoure</div><div class="kwert">22,4 %</div><div class="zusatz">5.200 Bestellungen</div></div><div class="kachel akzent"><div class="klabel">Ertrag nach Retouren</div><div class="kwert">47.674 EUR</div><div class="zusatz">Rohertrag der ausgewerteten Artikel minus 30.552 EUR Retourenkosten</div></div></div>
+
+  <h2>Retourenquote je Bestellmonat</h2>
+  <p class="hint">Jede Retoure zählt zu dem Monat, in dem bestellt wurde, nicht zu dem, in dem sie
+     eintrifft. Nur so sind Monate vergleichbar. Bei den jüngsten Monaten fehlen noch Retouren; dort
+     steht der dunkle Balken für das, was da ist, und die gestrichelte Linie für den erwarteten Endwert,
+     hochgerechnet aus dem zeitlichen Verlauf der abgeschlossenen Monate.</p>
+  <svg viewBox="0 0 576 260" role="img" class="chart"><g class="mark"><title>2026-01: 17,0 % bisher</title><rect x="0" y="21.7" width="66" height="168.3" fill="var(--serie)"/></g><text x="33.0" y="210" class="lbl mitte">01.26</text><text x="33.0" y="110.9" class="val-inv mitte">17,0 %</text><g class="mark"><title>2026-02: 16,6 % bisher</title><rect x="96" y="26.4" width="66" height="163.6" fill="var(--serie)"/></g><text x="129.0" y="210" class="lbl mitte">02.26</text><text x="129.0" y="113.2" class="val-inv mitte">16,6 %</text><g class="mark"><title>2026-03: 19,2 % bisher</title><rect x="192" y="0.0" width="66" height="190.0" fill="var(--serie)"/></g><text x="225.0" y="210" class="lbl mitte">03.26</text><text x="225.0" y="100.0" class="val-inv mitte">19,2 %</text><rect x="288" y="21.8" width="66" height="0.0" fill="var(--serie)" opacity="0.22"/><line x1="288" y1="21.8" x2="354" y2="21.8" stroke="var(--signal)" stroke-width="2" stroke-dasharray="4 3"/><text x="321.0" y="13.8" class="mini mitte">17,0 %</text><g class="mark"><title>2026-04: 17,0 % bisher, hochgerechnet 17,0 % bei 100 % Reife</title><rect x="288" y="21.8" width="66" height="168.2" fill="var(--serie)"/></g><text x="321.0" y="210" class="lbl mitte">04.26</text><text x="321.0" y="228" class="mini mitte">100 % da</text><rect x="384" y="2.3" width="66" height="23.0" fill="var(--serie)" opacity="0.22"/><line x1="384" y1="2.3" x2="450" y2="2.3" stroke="var(--signal)" stroke-width="2" stroke-dasharray="4 3"/><text x="417.0" y="-5.7" class="mini mitte">19,0 %</text><g class="mark"><title>2026-05: 16,7 % bisher, hochgerechnet 19,0 % bei 88 % Reife</title><rect x="384" y="25.3" width="66" height="164.7" fill="var(--serie)"/></g><text x="417.0" y="210" class="lbl mitte">05.26</text><text x="417.0" y="228" class="mini mitte">88 % da</text><rect x="480" y="36.0" width="66" height="64.8" fill="var(--serie)" opacity="0.22"/><line x1="480" y1="36.0" x2="546" y2="36.0" stroke="var(--signal)" stroke-width="2" stroke-dasharray="4 3"/><text x="513.0" y="28.0" class="mini mitte">15,6 %</text><g class="mark"><title>2026-06: 9,0 % bisher, hochgerechnet 15,6 % bei 58 % Reife</title><rect x="480" y="100.8" width="66" height="89.2" fill="var(--serie)"/></g><text x="513.0" y="210" class="lbl mitte">06.26</text><text x="513.0" y="228" class="mini mitte">58 % da</text></svg>
 
   <h2>Befunde und was zu tun ist</h2>
-  <p class="hint">Nach Geldwert sortiert. Jeder Befund sagt, was in den Daten steht, warum das zählt und
-     welche Schritte folgen. Zahlen stammen aus dem Export, die Einordnung aus der Fachliteratur.</p>
+  <p class="hint">Nach Geldwert sortiert. Jeder Block enthält die Zahl, ihre Bedeutung und die
+     Maßnahme, damit nichts an anderer Stelle nachgeschlagen werden muss.</p>
   
         <article class="befund-karte">
           <div class="bk-kopf">
@@ -102,6 +113,7 @@
           </div>
           <div class="bk-body">
             <div class="bk-spalte">
+              <div class="bk-chart"><svg viewBox="0 0 788 288" role="img" class="chart"><text x="0" y="18.2" class="lbl">Regenjacke Tech · JKT-RN-L-WEI</text><g class="mark"><title>Regenjacke Tech · JKT-RN-L-WEI: 3.851 EUR</title><rect x="258" y="0" width="430.0" height="26" rx="4" fill="#F2653C"/></g><text x="698.0" y="18.2" class="val">3.851 EUR</text><text x="0" y="54.2" class="lbl">Zip-Hoodie Heavy · HOOD-ZP-XS-SCH</text><g class="mark"><title>Zip-Hoodie Heavy · HOOD-ZP-XS-SCH: 3.824 EUR</title><rect x="258" y="36" width="427.0" height="26" rx="4" fill="var(--serie)"/></g><text x="695.0" y="54.2" class="val">3.824 EUR</text><text x="0" y="90.2" class="lbl">Regenjacke Tech · JKT-RN-XL-SCH</text><g class="mark"><title>Regenjacke Tech · JKT-RN-XL-SCH: 3.416 EUR</title><rect x="258" y="72" width="381.4" height="26" rx="4" fill="#F2653C"/></g><text x="649.4" y="90.2" class="val">3.416 EUR</text><text x="0" y="126.2" class="lbl">Zip-Hoodie Heavy · HOOD-ZP-S-SCH</text><g class="mark"><title>Zip-Hoodie Heavy · HOOD-ZP-S-SCH: 3.209 EUR</title><rect x="258" y="108" width="358.3" height="26" rx="4" fill="var(--serie)"/></g><text x="626.3" y="126.2" class="val">3.209 EUR</text><text x="0" y="162.2" class="lbl">Regenjacke Tech · JKT-RN-S-SCH</text><g class="mark"><title>Regenjacke Tech · JKT-RN-S-SCH: 3.118 EUR</title><rect x="258" y="144" width="348.1" height="26" rx="4" fill="#F2653C"/></g><text x="616.1" y="162.2" class="val">3.118 EUR</text><text x="0" y="198.2" class="lbl">Regenjacke Tech · JKT-RN-M-WEI</text><g class="mark"><title>Regenjacke Tech · JKT-RN-M-WEI: 2.850 EUR</title><rect x="258" y="180" width="318.2" height="26" rx="4" fill="#F2653C"/></g><text x="586.2" y="198.2" class="val">2.850 EUR</text><text x="0" y="234.2" class="lbl">Regenjacke Tech · JKT-RN-XS-SCH</text><g class="mark"><title>Regenjacke Tech · JKT-RN-XS-SCH: 2.636 EUR</title><rect x="258" y="216" width="294.3" height="26" rx="4" fill="var(--serie)"/></g><text x="562.3" y="234.2" class="val">2.636 EUR</text><text x="0" y="270.2" class="lbl">Zip-Hoodie Heavy · HOOD-ZP-L-WEI</text><g class="mark"><title>Zip-Hoodie Heavy · HOOD-ZP-L-WEI: 2.597 EUR</title><rect x="258" y="252" width="290.0" height="26" rx="4" fill="var(--serie)"/></g><text x="558.0" y="270.2" class="val">2.597 EUR</text></svg></div>
               <p class="mini-lbl">Was in den Daten steht</p>
               <p>5 Varianten stehen nach Abzug der Retourenkosten bei oder unter null, 4 davon im Minus. Schlechteste Variante JKT-RN-L-WEI: 2.944 EUR Rohertrag, danach -907 EUR.</p>
               <p class="mini-lbl">Warum das zählt</p>
@@ -128,6 +140,7 @@
           </div>
           <div class="bk-body">
             <div class="bk-spalte">
+              <div class="bk-chart"><svg viewBox="0 0 860 72" role="img" class="chart"><text x="0" y="18.2" class="lbl">Rechnungskauf: Anteil an allen Bestellungen</text><g class="mark"><title>Rechnungskauf: Anteil an allen Bestellungen: 29,0 %</title><rect x="330" y="0" width="177.7" height="26" rx="4" fill="var(--serie)"/></g><text x="517.7" y="18.2" class="val">29,0 %</text><text x="0" y="54.2" class="lbl">Rechnungskauf: Anteil an den nicht abgeholten</text><g class="mark"><title>Rechnungskauf: Anteil an den nicht abgeholten: 70,2 %</title><rect x="330" y="36" width="430.0" height="26" rx="4" fill="#F2653C"/></g><text x="770.0" y="54.2" class="val">70,2 %</text></svg></div>
               <p class="mini-lbl">Was in den Daten steht</p>
               <p>94 Sendungen kamen ungeöffnet zurück, 1,8 % aller Bestellungen und 8,1 % aller Retourenvorgänge. Auffällig: Rechnungskauf macht 29,0 % des Geschäfts aus, aber 70,2 % dieser Fälle.</p>
               <p class="mini-lbl">Warum das zählt</p>
@@ -154,6 +167,7 @@
           </div>
           <div class="bk-body">
             <div class="bk-spalte">
+              <div class="bk-chart"><svg viewBox="0 0 680 180" role="img" class="chart"><text x="0" y="18.2" class="lbl">Größe L</text><g class="mark"><title>Größe L: 30</title><rect x="150" y="0" width="430.0" height="26" rx="4" fill="var(--serie)"/></g><text x="590.0" y="18.2" class="val">30</text><text x="0" y="54.2" class="lbl">Größe M</text><g class="mark"><title>Größe M: 25</title><rect x="150" y="36" width="358.3" height="26" rx="4" fill="var(--serie)"/></g><text x="518.3" y="54.2" class="val">25</text><text x="0" y="90.2" class="lbl">Größe S</text><g class="mark"><title>Größe S: 22</title><rect x="150" y="72" width="315.3" height="26" rx="4" fill="var(--serie)"/></g><text x="475.3" y="90.2" class="val">22</text><text x="0" y="126.2" class="lbl">Größe XL</text><g class="mark"><title>Größe XL: 22</title><rect x="150" y="108" width="315.3" height="26" rx="4" fill="var(--serie)"/></g><text x="475.3" y="126.2" class="val">22</text><text x="0" y="162.2" class="lbl">Größe XS</text><g class="mark"><title>Größe XS: 15</title><rect x="150" y="144" width="215.0" height="26" rx="4" fill="var(--serie)"/></g><text x="375.0" y="162.2" class="val">15</text></svg></div>
               <p class="mini-lbl">Was in den Daten steht</p>
               <p>114 Retouren mit Grund &quot;zu klein&quot; gegen 6 mit &quot;zu groß&quot;, durchgehend über alle Größen. Das ist kein Streuungsmuster, sondern ein Schnittfehler des Artikels.</p>
               <p class="mini-lbl">Warum das zählt</p>
@@ -180,6 +194,7 @@
           </div>
           <div class="bk-body">
             <div class="bk-spalte">
+              
               <p class="mini-lbl">Was in den Daten steht</p>
               <p>33 Defekt-Retouren im Monat 2026-04, sonst rund 1 pro Monat.</p>
               <p class="mini-lbl">Warum das zählt</p>
@@ -198,79 +213,12 @@
             </div>
           </div>
         </article>
-        <article class="befund-karte">
-          <div class="bk-kopf">
-            <span class="bk-nr">05</span>
-            <h3>Die letzten Monate sehen besser aus, als sie sind</h3>
-            <span class="bk-hebel">kein Eurobetrag, aber die Grundlage jeder anderen Zahl hier</span>
-          </div>
-          <div class="bk-body">
-            <div class="bk-spalte">
-              <p class="mini-lbl">Was in den Daten steht</p>
-              <p>So ist hier gerechnet: Jede Retoure wird der Bestellung zugerechnet, aus der sie stammt. Eine Retoure aus einer Januar-Bestellung zählt zum Januar, auch wenn sie erst im März eintrifft. Das macht Monate vergleichbar, hat aber eine Folge: Die abgeschlossenen Bestellmonate liegen im Schnitt bei 17,6 Prozent, der jüngste Monat 2026-06 zeigt 9,0 Prozent. Das sind 8,6 Prozentpunkte Unterschied, allein weil dort noch Retouren fehlen. Betroffen sind 2026-04, 2026-05, 2026-06, dort läuft die Rückgabefrist noch.</p>
-              <p class="mini-lbl">Warum das zählt</p>
-              <p>Aus einer scheinbar fallenden Quote folgen falsche Entscheidungen. Eine Maßnahme sieht aus, als hätte sie gewirkt. Ein Problem scheint sich von selbst zu erledigen. Beides stimmt nicht, und man merkt es erst Monate später, wenn die Nachzügler da sind. Deshalb sind unfertige Monate hier gekennzeichnet und fließen in keinen Vergleich ein.</p>
-              <p class="unsichtbar"><span class="mini-lbl">Warum das im Standard-Report fehlt</span>Die übliche Auswertung zählt Retouren in dem Monat, in dem sie im Lager ankommen. Dann steckt in jedem Monat eine Mischung aus alten und neuen Bestellungen, und die letzten Monate wirken automatisch gut.</p>
-            </div>
-            <div class="bk-spalte">
-              <p class="mini-lbl">Was zu tun ist</p>
-              <ol><li>Im eigenen Reporting prüfen, ob Retouren nach Bestell- oder nach Eingangsmonat gezählt werden. Bei Eingangsmonat ist jeder Monatsvergleich verzerrt.</li><li>Einen Monat erst bewerten, wenn Rückgabefrist plus Bearbeitungszeit abgelaufen sind.</li><li>Unfertige Monate im Report sichtbar kennzeichnen, statt sie kommentarlos mitzuzeigen.</li><li>Erfolge von Maßnahmen erst an vollständigen Monaten festmachen.</li></ol>
-              <dl class="bk-meta">
-                <dt>Aufwand</dt><dd>S, eine Frage der Auswertungslogik</dd>
-                <dt>Wer</dt><dd>Controlling</dd>
-                <dt>Woran du merkst, dass es wirkt</dt><dd>Dieselbe Kohorte nach Ablauf der Reifezeit gegen die Zahl, die vorher gemeldet wurde</dd>
-                <dt class="gegen">Was dabei nicht kaputtgehen darf</dt><dd>keine, das ist eine reine Korrektur der Rechenweise</dd>
-              </dl>
-            </div>
-          </div>
-        </article>
-        <article class="befund-karte">
-          <div class="bk-kopf">
-            <span class="bk-nr">06</span>
-            <h3>Retouren ohne verwertbaren Grund</h3>
-            <span class="bk-hebel">nicht bezifferbar, aber Voraussetzung für jede weitere Auswertung</span>
-          </div>
-          <div class="bk-body">
-            <div class="bk-spalte">
-              <p class="mini-lbl">Was in den Daten steht</p>
-              <p>150 Retouren, 11,5 % aller Fälle, ohne brauchbare Grundangabe.</p>
-              <p class="mini-lbl">Warum das zählt</p>
-              <p>Jede fehlende Angabe ist eine Analyse, die nicht stattfinden kann. Und die Lücken verteilen sich selten gleichmäßig: Wenn ein Artikel oder ein Rückgabeweg auffällig oft ohne Grund erfasst wird, steckt dort meist ein eigener Fall, den niemand sieht.</p>
-              <p class="unsichtbar"><span class="mini-lbl">Warum das im Standard-Report fehlt</span>Leere Gründe und Sonstiges landen im Report als Restposten und werden nicht weiter angeschaut. Dahinter steckt häufig ein eigener Fall, etwa nicht abgeholte Sendungen oder ein Prozessfehler.</p>
-            </div>
-            <div class="bk-spalte">
-              <p class="mini-lbl">Was zu tun ist</p>
-              <ol><li>Prüfen, an welcher Stelle der Grund verloren geht: Retourenportal, Wareneingang, manuelle Erfassung.</li><li>Pflichtfeld mit wenigen, klaren Auswahlmöglichkeiten statt Freitext.</li><li>Freitext zusätzlich anbieten, aber nicht als einzige Option.</li><li>Prüfen, ob sich die Lücken auf bestimmte Artikel oder Rückgabewege häufen.</li></ol>
-              <dl class="bk-meta">
-                <dt>Aufwand</dt><dd>M, hängt am System</dd>
-                <dt>Wer</dt><dd>Logistik und Kundenservice</dd>
-                <dt>Woran du merkst, dass es wirkt</dt><dd>Anteil der Retouren ohne Grund, Ziel unter 5 Prozent</dd>
-                <dt class="gegen">Was dabei nicht kaputtgehen darf</dt><dd>Bearbeitungszeit im Wareneingang</dd>
-              </dl>
-            </div>
-          </div>
-        </article>
-
-  <h2>Retourenquote je Bestellmonat</h2>
-  <p class="hint">Zugeordnet nach Bestellung, nicht nach Retourendatum. Schraffierte Monate sind noch
-     nicht vollständig, ihre Quote sieht besser aus als sie ist.</p>
-  <svg viewBox="0 0 528 252" role="img" class="chart"><defs><pattern id="unreif" width="7" height="7" patternTransform="rotate(45)" patternUnits="userSpaceOnUse"><rect width="7" height="7" fill="var(--serie)" opacity="0.28"/><line x1="0" y1="0" x2="0" y2="7" stroke="var(--serie)" stroke-width="3"/></pattern></defs><g class="mark"><title>2026-01: 17,0 %</title><rect x="0" y="21.7" width="62" height="168.3" rx="4" fill="var(--serie)"/></g><text x="31.0" y="12.7" class="val mitte">17,0 %</text><text x="31.0" y="210" class="lbl mitte">01.26</text><g class="mark"><title>2026-02: 16,6 %</title><rect x="88" y="26.4" width="62" height="163.6" rx="4" fill="var(--serie)"/></g><text x="119.0" y="17.4" class="val mitte">16,6 %</text><text x="119.0" y="210" class="lbl mitte">02.26</text><g class="mark"><title>2026-03: 19,2 %</title><rect x="176" y="0.0" width="62" height="190.0" rx="4" fill="var(--serie)"/></g><text x="207.0" y="-9.0" class="val mitte">19,2 %</text><text x="207.0" y="210" class="lbl mitte">03.26</text><g class="mark"><title>2026-04: 17,0 % (unvollständig)</title><rect x="264" y="21.8" width="62" height="168.2" rx="4" fill="url(#unreif)"/></g><text x="295.0" y="12.8" class="val mitte">17,0 %</text><text x="295.0" y="210" class="lbl mitte">04.26</text><text x="295.0" y="228" class="mini mitte">unvollständig</text><g class="mark"><title>2026-05: 16,7 % (unvollständig)</title><rect x="352" y="25.3" width="62" height="164.7" rx="4" fill="url(#unreif)"/></g><text x="383.0" y="16.3" class="val mitte">16,7 %</text><text x="383.0" y="210" class="lbl mitte">05.26</text><text x="383.0" y="228" class="mini mitte">unvollständig</text><g class="mark"><title>2026-06: 9,0 % (unvollständig)</title><rect x="440" y="100.8" width="62" height="89.2" rx="4" fill="url(#unreif)"/></g><text x="471.0" y="91.8" class="val mitte">9,0 %</text><text x="471.0" y="210" class="lbl mitte">06.26</text><text x="471.0" y="228" class="mini mitte">unvollständig</text></svg>
-
-  <h2>Was die Retouren kosten, je Artikelvariante</h2>
-  <p class="hint">Gerechnet als erstatteter Betrag plus Bearbeitungskosten plus Wertverlust bei defekter
-     Ware. Orange markiert heißt: Von dem, was diese Variante im Verkauf verdient hat, bleibt nach Abzug
-     dieser Kosten nichts übrig. Der Artikel kostet unterm Strich Geld.</p>
-  <svg viewBox="0 0 788 288" role="img" class="chart"><text x="0" y="18.2" class="lbl">Regenjacke Tech · JKT-RN-L-WEI</text><g class="mark"><title>Regenjacke Tech · JKT-RN-L-WEI: 3.851 EUR</title><rect x="258" y="0" width="430.0" height="26" rx="4" fill="#F2653C"/></g><text x="698.0" y="18.2" class="val">3.851 EUR</text><text x="0" y="54.2" class="lbl">Zip-Hoodie Heavy · HOOD-ZP-XS-SCH</text><g class="mark"><title>Zip-Hoodie Heavy · HOOD-ZP-XS-SCH: 3.824 EUR</title><rect x="258" y="36" width="427.0" height="26" rx="4" fill="var(--serie)"/></g><text x="695.0" y="54.2" class="val">3.824 EUR</text><text x="0" y="90.2" class="lbl">Regenjacke Tech · JKT-RN-XL-SCH</text><g class="mark"><title>Regenjacke Tech · JKT-RN-XL-SCH: 3.416 EUR</title><rect x="258" y="72" width="381.4" height="26" rx="4" fill="#F2653C"/></g><text x="649.4" y="90.2" class="val">3.416 EUR</text><text x="0" y="126.2" class="lbl">Zip-Hoodie Heavy · HOOD-ZP-S-SCH</text><g class="mark"><title>Zip-Hoodie Heavy · HOOD-ZP-S-SCH: 3.209 EUR</title><rect x="258" y="108" width="358.3" height="26" rx="4" fill="var(--serie)"/></g><text x="626.3" y="126.2" class="val">3.209 EUR</text><text x="0" y="162.2" class="lbl">Regenjacke Tech · JKT-RN-S-SCH</text><g class="mark"><title>Regenjacke Tech · JKT-RN-S-SCH: 3.118 EUR</title><rect x="258" y="144" width="348.1" height="26" rx="4" fill="#F2653C"/></g><text x="616.1" y="162.2" class="val">3.118 EUR</text><text x="0" y="198.2" class="lbl">Regenjacke Tech · JKT-RN-M-WEI</text><g class="mark"><title>Regenjacke Tech · JKT-RN-M-WEI: 2.850 EUR</title><rect x="258" y="180" width="318.2" height="26" rx="4" fill="#F2653C"/></g><text x="586.2" y="198.2" class="val">2.850 EUR</text><text x="0" y="234.2" class="lbl">Regenjacke Tech · JKT-RN-XS-SCH</text><g class="mark"><title>Regenjacke Tech · JKT-RN-XS-SCH: 2.636 EUR</title><rect x="258" y="216" width="294.3" height="26" rx="4" fill="var(--serie)"/></g><text x="562.3" y="234.2" class="val">2.636 EUR</text><text x="0" y="270.2" class="lbl">Zip-Hoodie Heavy · HOOD-ZP-L-WEI</text><g class="mark"><title>Zip-Hoodie Heavy · HOOD-ZP-L-WEI: 2.597 EUR</title><rect x="258" y="252" width="290.0" height="26" rx="4" fill="var(--serie)"/></g><text x="558.0" y="270.2" class="val">2.597 EUR</text></svg>
 
   <h2>Retourengründe</h2>
   <p class="hint">Gezählt in <strong>Retourenpositionen</strong>, also je zurückgeschicktem Artikel.
-     Eine Sendung mit drei Artikeln zählt hier dreimal. Orange markiert: Gründe, hinter denen sich ein
-     eigener Fall verbergen kann.</p>
+     Eine Sendung mit drei Artikeln zählt hier dreimal.</p>
+  <div class="warnung"><span class="mini-lbl">Datenqualität</span>Bei 150 Retouren (11,5 % aller Fälle) wurde kein verwertbarer Grund erfasst. Die Verteilung unten ist entsprechend unsicher, und die Lücken verteilen sich selten gleichmäßig. Lohnt zu prüfen, ob sie sich auf einzelne Artikel oder Rückgabewege häufen, dort steckt dann meist ein eigener Fall.</div>
   <svg viewBox="0 0 766 288" role="img" class="chart"><text x="0" y="18.2" class="lbl">Farbe oder Optik gefällt nicht</text><g class="mark"><title>Farbe oder Optik gefällt nicht: 252</title><rect x="236" y="0" width="430.0" height="26" rx="4" fill="var(--serie)"/></g><text x="676.0" y="18.2" class="val">252</text><text x="0" y="54.2" class="lbl">Zu klein</text><g class="mark"><title>Zu klein: 226</title><rect x="236" y="36" width="385.6" height="26" rx="4" fill="var(--serie)"/></g><text x="631.6" y="54.2" class="val">226</text><text x="0" y="90.2" class="lbl">Kein Grund erfasst</text><g class="mark"><title>Kein Grund erfasst: 150</title><rect x="236" y="72" width="256.0" height="26" rx="4" fill="#F2653C"/></g><text x="502.0" y="90.2" class="val">150</text><text x="0" y="126.2" class="lbl">Nicht abgeholt oder verweigert</text><g class="mark"><title>Nicht abgeholt oder verweigert: 149</title><rect x="236" y="108" width="254.2" height="26" rx="4" fill="#F2653C"/></g><text x="500.2" y="126.2" class="val">149</text><text x="0" y="162.2" class="lbl">Zu groß</text><g class="mark"><title>Zu groß: 135</title><rect x="236" y="144" width="230.4" height="26" rx="4" fill="var(--serie)"/></g><text x="476.4" y="162.2" class="val">135</text><text x="0" y="198.2" class="lbl">Nicht wie beschrieben</text><g class="mark"><title>Nicht wie beschrieben: 102</title><rect x="236" y="180" width="174.0" height="26" rx="4" fill="var(--serie)"/></g><text x="420.0" y="198.2" class="val">102</text><text x="0" y="234.2" class="lbl">Doch nicht benötigt</text><g class="mark"><title>Doch nicht benötigt: 88</title><rect x="236" y="216" width="150.2" height="26" rx="4" fill="var(--serie)"/></g><text x="396.2" y="234.2" class="val">88</text><text x="0" y="270.2" class="lbl">Qualität oder Defekt</text><g class="mark"><title>Qualität oder Defekt: 82</title><rect x="236" y="252" width="139.9" height="26" rx="4" fill="var(--serie)"/></g><text x="385.9" y="270.2" class="val">82</text></svg>
-
-  <h2>Nicht abgeholte Sendungen: welche Zahlart auffällt</h2><p class='hint'>94 Sendungen kamen ungeöffnet zurück, 9.825 EUR Umsatz plus 940 EUR Prozesskosten. Achtung bei der Einheit: hier sind Sendungen gezählt, im Gründe-Chart darüber Artikelpositionen. Dieselben Fälle enthalten mehr Artikel als Sendungen. Die beiden Balken zeigen dieselbe Zahlart zweimal: wie häufig sie im gesamten Geschäft vorkommt und wie häufig sie unter genau diesen Sendungen vorkommt. Je weiter die Balken auseinanderliegen, desto stärker hängt das Nichtabholen mit der Zahlart zusammen.</p><svg viewBox="0 0 860 72" role="img" class="chart"><text x="0" y="18.2" class="lbl">Rechnungskauf: Anteil an allen Bestellungen</text><g class="mark"><title>Rechnungskauf: Anteil an allen Bestellungen: 29,0 %</title><rect x="330" y="0" width="177.7" height="26" rx="4" fill="var(--serie)"/></g><text x="517.7" y="18.2" class="val">29,0 %</text><text x="0" y="54.2" class="lbl">Rechnungskauf: Anteil an den nicht abgeholten</text><g class="mark"><title>Rechnungskauf: Anteil an den nicht abgeholten: 70,2 %</title><rect x="330" y="36" width="430.0" height="26" rx="4" fill="#F2653C"/></g><text x="770.0" y="54.2" class="val">70,2 %</text></svg>
-
-  <h2>Größenbedingte Retouren je Größe</h2><p class='hint'>Hoodie Classic: 114 mal zu klein gegen 6 mal zu groß. Der Artikel fällt klein aus.</p><svg viewBox="0 0 680 180" role="img" class="chart"><text x="0" y="18.2" class="lbl">Größe L</text><g class="mark"><title>Größe L: 30</title><rect x="150" y="0" width="430.0" height="26" rx="4" fill="var(--serie)"/></g><text x="590.0" y="18.2" class="val">30</text><text x="0" y="54.2" class="lbl">Größe M</text><g class="mark"><title>Größe M: 25</title><rect x="150" y="36" width="358.3" height="26" rx="4" fill="var(--serie)"/></g><text x="518.3" y="54.2" class="val">25</text><text x="0" y="90.2" class="lbl">Größe S</text><g class="mark"><title>Größe S: 22</title><rect x="150" y="72" width="315.3" height="26" rx="4" fill="var(--serie)"/></g><text x="475.3" y="90.2" class="val">22</text><text x="0" y="126.2" class="lbl">Größe XL</text><g class="mark"><title>Größe XL: 22</title><rect x="150" y="108" width="315.3" height="26" rx="4" fill="var(--serie)"/></g><text x="475.3" y="126.2" class="val">22</text><text x="0" y="162.2" class="lbl">Größe XS</text><g class="mark"><title>Größe XS: 15</title><rect x="150" y="144" width="215.0" height="26" rx="4" fill="var(--serie)"/></g><text x="375.0" y="162.2" class="val">15</text></svg>
 
   <h2>Artikel im Detail</h2>
   <p class="hint">Dieselben Zahlen als Tabelle, kopierbar und nachrechenbar. "Ertrag nach Retouren" ist

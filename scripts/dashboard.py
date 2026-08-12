@@ -77,38 +77,45 @@ def bars(rows, value_key, label_key, fmt, highlight=None, height=26, gap=10, lab
 
 
 def kohorten_chart(kohorten):
-    """Senkrechte Balken je Bestellmonat. Unreife Kohorten schraffiert plus Label."""
+    """Balken je Bestellmonat. Unvollständige Monate zeigen den Ist-Wert dunkel und
+    die Hochrechnung auf den erwarteten Endwert hell darüber."""
     if not kohorten:
         return ""
-    w_bar, gap, h = 62, 26, 190
-    vals = [k["beta_quote"] or 0 for k in kohorten]
+    w_bar, gap, h = 66, 30, 190
+    vals = [max(k.get("beta_hochgerechnet") or 0, k["beta_quote"] or 0) for k in kohorten]
     vmax = max(vals) or 1
     breite = len(kohorten) * (w_bar + gap)
-    out = [
-        f'<svg viewBox="0 0 {breite} {h + 62}" role="img" class="chart">',
-        '<defs><pattern id="unreif" width="7" height="7" patternTransform="rotate(45)" '
-        'patternUnits="userSpaceOnUse">'
-        f'<rect width="7" height="7" fill="var(--serie)" opacity="0.28"/>'
-        f'<line x1="0" y1="0" x2="0" y2="7" stroke="var(--serie)" stroke-width="3"/>'
-        "</pattern></defs>",
-    ]
+    out = [f'<svg viewBox="0 0 {breite} {h + 70}" role="img" class="chart">']
     for i, k in enumerate(kohorten):
         x = i * (w_bar + gap)
         v = k["beta_quote"] or 0
+        hoch = k.get("beta_hochgerechnet")
         bh = max(3, v / vmax * h)
         y = h - bh
-        fill = "url(#unreif)" if not k["mature"] else "var(--serie)"
-        note = " (unvollständig)" if not k["mature"] else ""
-        out.append(
-            f'<g class="mark"><title>{esc(k["kohorte"])}: {esc(pct(v))}{esc(note)}</title>'
-            f'<rect x="{x}" y="{y:.1f}" width="{w_bar}" height="{bh:.1f}" rx="4" fill="{fill}"/></g>'
-            f'<text x="{x + w_bar / 2}" y="{y - 9:.1f}" class="val mitte">{esc(pct(v))}</text>'
-            f'<text x="{x + w_bar / 2}" y="{h + 20}" class="lbl mitte">{esc(k["kohorte"][5:])}.{esc(k["kohorte"][2:4])}</text>'
-        )
-        if not k["mature"]:
+        titel = f'{k["kohorte"]}: {pct(v)} bisher'
+        if hoch:
+            gesamt_h = hoch / vmax * h
+            y_h = h - gesamt_h
+            titel += f', hochgerechnet {pct(hoch)} bei {pct(k["reifegrad"], 0)} Reife'
             out.append(
-                f'<text x="{x + w_bar / 2}" y="{h + 38}" class="mini mitte">unvollständig</text>'
+                f'<rect x="{x}" y="{y_h:.1f}" width="{w_bar}" height="{(gesamt_h - bh):.1f}" '
+                f'fill="var(--serie)" opacity="0.22"/>'
+                f'<line x1="{x}" y1="{y_h:.1f}" x2="{x + w_bar}" y2="{y_h:.1f}" '
+                f'stroke="var(--signal)" stroke-width="2" stroke-dasharray="4 3"/>'
+                f'<text x="{x + w_bar / 2}" y="{y_h - 8:.1f}" class="mini mitte">{esc(pct(hoch))}</text>'
             )
+        out.append(
+            f'<g class="mark"><title>{esc(titel)}</title>'
+            f'<rect x="{x}" y="{y:.1f}" width="{w_bar}" height="{bh:.1f}" fill="var(--serie)"/></g>'
+            f'<text x="{x + w_bar / 2}" y="{h + 20}" class="lbl mitte">'
+            f'{esc(k["kohorte"][5:])}.{esc(k["kohorte"][2:4])}</text>'
+        )
+        if hoch:
+            out.append(f'<text x="{x + w_bar / 2}" y="{h + 38}" class="mini mitte">'
+                       f'{esc(pct(k["reifegrad"], 0))} da</text>')
+        else:
+            out.append(f'<text x="{x + w_bar / 2}" y="{y + bh * 0.5 + 5:.1f}" class="val-inv mitte">'
+                       f'{esc(pct(v))}</text>')
     out.append("</svg>")
     return "".join(out)
 
@@ -143,6 +150,8 @@ def build(d, titel):
     meta = d["meta"]
     kosten = d["kosten_top"]
     kosten_summe = sum(c["gesamt"] for c in kosten)
+    ertrag_nach = sum(c["deckungsbeitrag_nach_retouren"] for c in kosten
+                      if c.get("deckungsbeitrag_nach_retouren") is not None)
     np_ = d["nicht_abgeholt"]
 
     # --- KPI-Zeile
@@ -150,51 +159,9 @@ def build(d, titel):
         kachel("Retouren nach Menge", pct(q["gesamt_beta"]), "Beta-Quote"),
         kachel("Retouren nach Wert", pct(q["gesamt_gamma"]), "Gamma-Quote"),
         kachel("Bestellungen mit Retoure", pct(q["gesamt_bestellquote"]), f'{num(meta["bestellungen"])} Bestellungen'),
-        kachel("Retourenkosten der teuersten Artikel", eur(kosten_summe),
-               "Erstattungen, Bearbeitung, Wertverlust", akzent=True),
+        kachel("Ertrag nach Retouren", eur(ertrag_nach),
+               f"Rohertrag der ausgewerteten Artikel minus {eur(kosten_summe)} Retourenkosten", akzent=True),
     ]
-
-    # --- Befund-Karten: Zahl, Bedeutung, Maßnahme
-    befunde = befunde_mod.sammle(d)
-    karten = []
-    for i, b in enumerate(befunde, 1):
-        schritte = "".join(f"<li>{esc(s)}</li>" for s in b["schritte"])
-        unsichtbar = (
-            f'<p class="unsichtbar"><span class="mini-lbl">Warum das im Standard-Report fehlt</span>'
-            f'{esc(b["unsichtbar"])}</p>' if b.get("unsichtbar") else ""
-        )
-        beleg = (f'<p class="beleg"><span class="mini-lbl">Belegt</span>{esc(b["beleg"])}</p>'
-                 if b.get("beleg") else "")
-        einschr = (f'<p class="beleg"><span class="mini-lbl">Einschränkung</span>{esc(b["einschraenkung"])}</p>'
-                   if b.get("einschraenkung") else "")
-        karten.append(f"""
-        <article class="befund-karte">
-          <div class="bk-kopf">
-            <span class="bk-nr">{i:02d}</span>
-            <h3>{esc(b["titel"])}</h3>
-            <span class="bk-hebel">{esc(b["hebel_text"])}</span>
-          </div>
-          <div class="bk-body">
-            <div class="bk-spalte">
-              <p class="mini-lbl">Was in den Daten steht</p>
-              <p>{esc(b["was"])}</p>
-              <p class="mini-lbl">Warum das zählt</p>
-              <p>{esc(b["warum"])}</p>
-              {unsichtbar}{beleg}{einschr}
-            </div>
-            <div class="bk-spalte">
-              <p class="mini-lbl">Was zu tun ist</p>
-              <ol>{schritte}</ol>
-              <dl class="bk-meta">
-                <dt>Aufwand</dt><dd>{esc(b["aufwand"])}</dd>
-                <dt>Wer</dt><dd>{esc(b["wer"])}</dd>
-                <dt>Woran du merkst, dass es wirkt</dt><dd>{esc(b["messung"])}</dd>
-                <dt class="gegen">Was dabei nicht kaputtgehen darf</dt><dd>{esc(b["gegen"])}</dd>
-              </dl>
-            </div>
-          </div>
-        </article>""")
-    hebel_summe = sum(b["hebel"] for b in befunde if b["hebel"])
 
     # --- Charts
     gruende = [{"grund": GRUND_NAMEN.get(k, k.replace("_", " ")), "n": v}
@@ -229,6 +196,72 @@ def build(d, titel):
         rows = [{"g": f'Größe {g}', "n": c.get("zu_klein", 0)} for g, c in sorted(l["je_groesse"].items())]
         chart_laeufer = bars(rows, "n", "g", lambda v: num(v))
 
+    # --- Befund-Karten: Zahl, Bedeutung, Maßnahme
+    befunde = [b for b in befunde_mod.sammle(d)
+               if not b["titel"].startswith("Die letzten Monate")
+               and not b["titel"].startswith("Retouren ohne")]
+    karten = []
+    for i, b in enumerate(befunde, 1):
+        schritte = "".join(f"<li>{esc(s)}</li>" for s in b["schritte"])
+        unsichtbar = (
+            f'<p class="unsichtbar"><span class="mini-lbl">Warum das im Standard-Report fehlt</span>'
+            f'{esc(b["unsichtbar"])}</p>' if b.get("unsichtbar") else ""
+        )
+        beleg = (f'<p class="beleg"><span class="mini-lbl">Belegt</span>{esc(b["beleg"])}</p>'
+                 if b.get("beleg") else "")
+        einschr = (f'<p class="beleg"><span class="mini-lbl">Einschränkung</span>{esc(b["einschraenkung"])}</p>'
+                   if b.get("einschraenkung") else "")
+        chart = ""
+        t = b["titel"]
+        if "verdient nach Retouren" in t or "unauffällige Quote" in t:
+            chart = chart_kosten
+        elif "abgeholt" in t:
+            chart = chart_zahlart
+        elif "fällt" in t and chart_laeufer:
+            chart = chart_laeufer
+        chart_block = f'<div class="bk-chart">{chart}</div>' if chart else ""
+        karten.append(f"""
+        <article class="befund-karte">
+          <div class="bk-kopf">
+            <span class="bk-nr">{i:02d}</span>
+            <h3>{esc(b["titel"])}</h3>
+            <span class="bk-hebel">{esc(b["hebel_text"])}</span>
+          </div>
+          <div class="bk-body">
+            <div class="bk-spalte">
+              {chart_block}
+              <p class="mini-lbl">Was in den Daten steht</p>
+              <p>{esc(b["was"])}</p>
+              <p class="mini-lbl">Warum das zählt</p>
+              <p>{esc(b["warum"])}</p>
+              {unsichtbar}{beleg}{einschr}
+            </div>
+            <div class="bk-spalte">
+              <p class="mini-lbl">Was zu tun ist</p>
+              <ol>{schritte}</ol>
+              <dl class="bk-meta">
+                <dt>Aufwand</dt><dd>{esc(b["aufwand"])}</dd>
+                <dt>Wer</dt><dd>{esc(b["wer"])}</dd>
+                <dt>Woran du merkst, dass es wirkt</dt><dd>{esc(b["messung"])}</dd>
+                <dt class="gegen">Was dabei nicht kaputtgehen darf</dt><dd>{esc(b["gegen"])}</dd>
+              </dl>
+            </div>
+          </div>
+        </article>""")
+    hebel_summe = sum(b["hebel"] for b in befunde if b["hebel"])
+
+    # Retouren ohne Grund sind kein Geschäftsbefund, sondern eine Datenqualitätsaussage.
+    # Sie gehört als Warnung an die Gründe-Auswertung, nicht in die Befundliste.
+    og = next((f for f in d.get("blinde_flecken", []) if "keinen brauchbaren Grund" in f["titel"]), None)
+    datenqualitaet = ""
+    if og:
+        datenqualitaet = (
+            f'<div class="warnung"><span class="mini-lbl">Datenqualität</span>'
+            f'Bei {num(og["anzahl"])} Retouren ({pct(og["anteil"])} aller Fälle) wurde kein verwertbarer '
+            f'Grund erfasst. Die Verteilung unten ist entsprechend unsicher, und die Lücken verteilen '
+            f'sich selten gleichmäßig. Lohnt zu prüfen, ob sie sich auf einzelne Artikel oder '
+            f'Rückgabewege häufen, dort steckt dann meist ein eigener Fall.</div>')
+
     # --- Annahmen und fehlende Spalten, in Klartext
     ERKLAERT = {
         "delivered_date": ("Zustelldatum",
@@ -261,7 +294,7 @@ def build(d, titel):
   :root {{
     --paper: {PAPER}; --ink: {INK}; --serie: {EMERALD}; --moss: {MOSS}; --signal: {SIGNAL};
     --bg: var(--paper); --text: var(--ink); --panel: #fff; --linie: rgba(8,58,42,.12);
-    --gedaempft: rgba(8,58,42,.62); --moss-flaeche: {MOSS};
+    --gedaempft: rgba(8,58,42,.62); --moss-flaeche: {MOSS}; --paper-fest: {PAPER};
   }}
   @media (prefers-color-scheme: dark) {{
     :root {{ --bg: {INK}; --text: {PAPER}; --serie: {EMERALD_HELL};
@@ -329,6 +362,10 @@ def build(d, titel):
     font-size: 13.5px; color: var(--gedaempft); }}
   .fuss ul {{ margin: 6px 0 18px; padding-left: 18px; }}
   .leer {{ color: var(--gedaempft); font-size: 14px; }}
+  .bk-chart {{ margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--linie); }}
+  .warnung {{ background: var(--moss-flaeche); border-left: 3px solid var(--signal);
+    padding: 14px 18px; margin: 10px 0 18px; font-size: 14px; }}
+  .chart .val-inv {{ font-size: 12.5px; fill: var(--paper-fest); font-weight: 600; }}
   .glossar {{ margin: 8px 0 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 4px 28px; font-size: 14px; }}
   .glossar dt {{ font-weight: 600; margin-top: 12px; }}
@@ -345,35 +382,23 @@ def build(d, titel):
 
   <div class="kacheln">{"".join(kacheln)}</div>
 
-  <h2>Befunde und was zu tun ist</h2>
-  <p class="hint">Nach Geldwert sortiert. Jeder Befund sagt, was in den Daten steht, warum das zählt und
-     welche Schritte folgen. Zahlen stammen aus dem Export, die Einordnung aus der Fachliteratur.</p>
-  {"".join(karten)}
-
   <h2>Retourenquote je Bestellmonat</h2>
-  <p class="hint">Zugeordnet nach Bestellung, nicht nach Retourendatum. Schraffierte Monate sind noch
-     nicht vollständig, ihre Quote sieht besser aus als sie ist.</p>
+  <p class="hint">Jede Retoure zählt zu dem Monat, in dem bestellt wurde, nicht zu dem, in dem sie
+     eintrifft. Nur so sind Monate vergleichbar. Bei den jüngsten Monaten fehlen noch Retouren; dort
+     steht der dunkle Balken für das, was da ist, und die gestrichelte Linie für den erwarteten Endwert,
+     hochgerechnet aus dem zeitlichen Verlauf der abgeschlossenen Monate.</p>
   {kohorten_chart(q["je_kohorte"])}
 
-  <h2>Was die Retouren kosten, je Artikelvariante</h2>
-  <p class="hint">Gerechnet als erstatteter Betrag plus Bearbeitungskosten plus Wertverlust bei defekter
-     Ware. Orange markiert heißt: Von dem, was diese Variante im Verkauf verdient hat, bleibt nach Abzug
-     dieser Kosten nichts übrig. Der Artikel kostet unterm Strich Geld.</p>
-  {chart_kosten}
+  <h2>Befunde und was zu tun ist</h2>
+  <p class="hint">Nach Geldwert sortiert. Jeder Block enthält die Zahl, ihre Bedeutung und die
+     Maßnahme, damit nichts an anderer Stelle nachgeschlagen werden muss.</p>
+  {"".join(karten)}
 
   <h2>Retourengründe</h2>
   <p class="hint">Gezählt in <strong>Retourenpositionen</strong>, also je zurückgeschicktem Artikel.
-     Eine Sendung mit drei Artikeln zählt hier dreimal. Orange markiert: Gründe, hinter denen sich ein
-     eigener Fall verbergen kann.</p>
+     Eine Sendung mit drei Artikeln zählt hier dreimal.</p>
+  {datenqualitaet}
   {chart_gruende}
-
-  {"<h2>Nicht abgeholte Sendungen: welche Zahlart auffällt</h2><p class='hint'>" +
-   esc(f'{num(np_["sendungen"])} Sendungen kamen ungeöffnet zurück, {eur(np_["verlorener_umsatz"])} Umsatz plus {eur(np_["zusatzkosten_versand_annahme"])} Prozesskosten. Achtung bei der Einheit: hier sind Sendungen gezählt, im Gründe-Chart darüber Artikelpositionen. Dieselben Fälle enthalten mehr Artikel als Sendungen. Die beiden Balken zeigen dieselbe Zahlart zweimal: wie häufig sie im gesamten Geschäft vorkommt und wie häufig sie unter genau diesen Sendungen vorkommt. Je weiter die Balken auseinanderliegen, desto stärker hängt das Nichtabholen mit der Zahlart zusammen.') +
-   "</p>" + chart_zahlart if chart_zahlart else ""}
-
-  {"<h2>Größenbedingte Retouren je Größe</h2><p class='hint'>" +
-   esc(f'{laeufer[0]["style"]}: {laeufer[0]["zu_klein"]} mal zu klein gegen {laeufer[0]["zu_gross"]} mal zu groß. Der Artikel {laeufer[0]["richtung"]}.') +
-   "</p>" + chart_laeufer if chart_laeufer else ""}
 
   <h2>Artikel im Detail</h2>
   <p class="hint">Dieselben Zahlen als Tabelle, kopierbar und nachrechenbar. "Ertrag nach Retouren" ist

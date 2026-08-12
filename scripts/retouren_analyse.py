@@ -107,6 +107,7 @@ def analyze(returns_rows, sales_rows, args):
     sku_name = {}
     sku_unit_cost = {}
     order_month = {}
+    order_dates = {}
     order_payment = {}
     order_channel = {}
     customer_orders = defaultdict(set)
@@ -123,6 +124,7 @@ def analyze(returns_rows, sales_rows, args):
         sku = row.get("product_number", "").strip()
         orders[oid].append(row)
         order_month[oid] = month_key(d)
+        order_dates[oid] = d
         order_payment[oid] = row.get("payment_method", "").strip() or "unbekannt"
         order_channel[oid] = row.get("channel", "").strip() or "unbekannt"
         cust = row.get("customer_number", "").strip()
@@ -151,6 +153,7 @@ def analyze(returns_rows, sales_rows, args):
     customer_return_orders = defaultdict(set)
     customer_return_count = Counter()
     nonpickup = []
+    return_latencies = []   # (Tage zwischen Bestellung und Retoure, Bestellmonat)
     defect_by_sku_month = defaultdict(Counter)
     unmatched_orders = 0
 
@@ -171,6 +174,9 @@ def analyze(returns_rows, sales_rows, args):
         if cohort is None:
             unmatched_orders += 1
         else:
+            od = order_dates.get(oid)
+            if od and d:
+                return_latencies.append(((d - od).days, cohort))
             ret_qty_by_cohort[cohort] += qty
             ret_value_by_cohort[cohort] += refund
             orders_with_return.add(oid)
@@ -219,19 +225,50 @@ def analyze(returns_rows, sales_rows, args):
             cohort_sold_qty[ck] += to_float(r.get("quantity")) or 1.0
             cohort_sold_value[ck] += to_float(r.get("net_revenue"))
 
-    cohorts = []
+    # Reifekurve: Wie viel Prozent der Retouren eines Bestellmonats sind nach X Tagen da?
+    # Abgeleitet aus den abgeschlossenen Monaten, danach Hochrechnung der jungen.
+    lat_reif = []           # Latenzen (Tage) aus reifen Kohorten
+    cohort_mature_flag = {}
     for ck in sorted(cohort_sold_qty):
         year, month = int(ck[:4]), int(ck[5:7])
         month_end = datetime(year + (month == 12), (month % 12) + 1, 1)
-        mature = month_end + timedelta(days=args.rueckgabefenster + args.reifepuffer) <= today
+        cohort_mature_flag[ck] = month_end + timedelta(days=args.rueckgabefenster + args.reifepuffer) <= today
+    for lat, ck in return_latencies:
+        if cohort_mature_flag.get(ck):
+            lat_reif.append(lat)
+    lat_reif.sort()
+
+    def reifegrad(tage):
+        """Anteil der Retouren, der nach so vielen Tagen typischerweise da ist."""
+        if not lat_reif or tage is None:
+            return None
+        n = sum(1 for l in lat_reif if l <= tage)
+        return n / len(lat_reif)
+
+    cohorts = []
+    for ck in sorted(cohort_sold_qty):
+        year, month = int(ck[:4]), int(ck[5:7])
+        month_start = datetime(year, month, 1)
+        month_end = datetime(year + (month == 12), (month % 12) + 1, 1)
+        mature = cohort_mature_flag[ck]
         sold_q, sold_v = cohort_sold_qty[ck], cohort_sold_value[ck]
-        cohorts.append({
+        beta = ret_qty_by_cohort[ck] / sold_q if sold_q else None
+        eintrag = {
             "kohorte": ck,
-            "beta_quote": round(ret_qty_by_cohort[ck] / sold_q, 4) if sold_q else None,
+            "beta_quote": round(beta, 4) if beta is not None else None,
             "gamma_quote": round(ret_value_by_cohort[ck] / sold_v, 4) if sold_v else None,
             "bestell_quote": round(cohort_orders_ret[ck] / cohort_orders[ck], 4) if cohort_orders[ck] else None,
             "mature": mature,
-        })
+        }
+        if not mature and beta is not None:
+            # mittleres Bestellalter dieser Kohorte zum Datenstand
+            mitte = month_start + (min(month_end, today) - month_start) / 2
+            alter = (today - mitte).days
+            grad = reifegrad(alter)
+            if grad and grad > 0.15:
+                eintrag["reifegrad"] = round(grad, 3)
+                eintrag["beta_hochgerechnet"] = round(beta / grad, 4)
+        cohorts.append(eintrag)
 
     # ---- SKU-Quoten mit Mindest-N
     sku_rates = []
