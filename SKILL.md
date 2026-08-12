@@ -29,9 +29,17 @@ python3 scripts/retouren_analyse.py --retouren <retouren.csv> --verkaeufe <verka
 
 Relevante Parameter (Defaults sind markierte Annahmen): `--prozesskosten` (EUR je Retoure, Default 10.00, EHI-Kernbereich 5 bis 20), `--rueckgabefenster` (Tage, Default 60), `--min-retouren` (Mindest-N je SKU, Default 3), `--reifepuffer` (Tage, Default 21).
 
-### Phase 3: Interpretieren und berichten
+### Phase 3: Dashboard erzeugen
 
-Schreib den Report aus `analysis.json` in dieser Struktur:
+```bash
+python3 scripts/dashboard.py --analyse analysis.json --out dashboard.html --titel "<Shop> · <Zeitraum>"
+```
+
+Erzeugt eine eigenständige HTML-Datei ohne externe Abhängigkeiten (Kennzahlen, blinde Flecken, Kohorten-Chart, Kosten je Artikel, Retourengründe, Zahlart-Kontrast, Größen-Verteilung, dazu alle Zahlen als Tabelle). Öffnet sich im Browser, hat einen Dunkelmodus und lässt sich weiterreichen. Sag dem Nutzer den Dateipfad.
+
+### Phase 4: Interpretieren und berichten
+
+Der Report ist die Erzählung zum Dashboard. Schreib ihn aus `analysis.json` in dieser Struktur:
 
 1. **Verdict:** zwei, drei Sätze. Das teuerste Muster zuerst, in Euro.
 2. **Kennzahlen:** Beta-, Gamma- und Bestellquote je Bestell-Kohorte. Unreife Kohorten (Flag `mature: false`) immer als vorläufig kennzeichnen.

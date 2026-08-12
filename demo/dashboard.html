@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Demo-Brand · Januar bis Juni 2026</title>
+<style>
+  :root {
+    --paper: #FAFAF7; --ink: #083A2A; --serie: #0B6E4F; --moss: #D4EDE0; --signal: #F2653C;
+    --bg: var(--paper); --text: var(--ink); --panel: #fff; --linie: rgba(8,58,42,.12);
+    --gedaempft: rgba(8,58,42,.62);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #083A2A; --text: #FAFAF7; --serie: #10A26B;
+      --panel: rgba(212,237,224,.06); --linie: rgba(212,237,224,.16); --gedaempft: rgba(250,250,247,.66); }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font-family: ui-sans-serif, system-ui, "Inter", sans-serif; line-height: 1.55;
+    font-feature-settings: "tnum" 1; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 48px 24px 80px; }
+  .eyebrow { font-family: ui-monospace, "JetBrains Mono", monospace; font-size: 11px;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--gedaempft); margin: 0 0 10px; }
+  h1 { font-size: 30px; line-height: 1.2; margin: 0 0 6px; font-weight: 600; letter-spacing: -.01em; }
+  h1 .punkt { color: var(--signal); }
+  .meta { color: var(--gedaempft); font-size: 14px; margin: 0 0 40px; }
+  h2 { font-size: 19px; margin: 46px 0 4px; font-weight: 600; letter-spacing: -.005em; }
+  h2 + .hint { color: var(--gedaempft); font-size: 14px; margin: 0 0 18px; }
+  .kacheln { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+  .kachel { background: var(--panel); border: 1px solid var(--linie); padding: 18px 18px 16px; }
+  .kachel.akzent { border-top: 3px solid var(--signal); }
+  .klabel { font-family: ui-monospace, monospace; font-size: 10.5px; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--gedaempft); }
+  .kwert { font-size: 32px; font-weight: 600; letter-spacing: -.02em; margin-top: 6px; }
+  .zusatz { font-size: 13px; color: var(--gedaempft); margin-top: 2px; }
+  .flecken { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; }
+  .fleck { background: var(--panel); border: 1px solid var(--linie); border-left: 3px solid var(--signal);
+    padding: 18px 20px; }
+  .fleck h3 { font-size: 15.5px; margin: 0 0 8px; font-weight: 600; }
+  .befund { margin: 0 0 10px; }
+  .warum { margin: 0; font-size: 13.5px; color: var(--gedaempft); }
+  .warum-lbl { display: block; font-family: ui-monospace, monospace; font-size: 10px;
+    letter-spacing: .12em; text-transform: uppercase; margin-bottom: 3px; }
+  .chart { width: 100%; height: auto; overflow: visible; margin-top: 6px; }
+  .chart .lbl { font-size: 13px; fill: var(--text); }
+  .chart .val { font-size: 12.5px; fill: var(--gedaempft); }
+  .chart .mini { font-size: 10px; fill: var(--signal); font-family: ui-monospace, monospace; }
+  .chart .mitte { text-anchor: middle; }
+  .chart .mark { transition: opacity .12s; }
+  .chart .mark:hover { opacity: .72; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 8px; }
+  th, td { text-align: left; padding: 9px 10px 9px 0; border-bottom: 1px solid var(--linie); }
+  th { font-family: ui-monospace, monospace; font-size: 10.5px; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--gedaempft); font-weight: 400; }
+  td.zahl, th.zahl { text-align: right; padding-right: 0; }
+  td.neg { color: var(--signal); font-weight: 600; }
+  .fuss { margin-top: 56px; padding-top: 22px; border-top: 1px solid var(--linie);
+    font-size: 13.5px; color: var(--gedaempft); }
+  .fuss ul { margin: 6px 0 18px; padding-left: 18px; }
+  .leer { color: var(--gedaempft); font-size: 14px; }
+  code { font-family: ui-monospace, monospace; font-size: .92em; }
+</style></head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Retouren-Analyse</p>
+  <h1>Demo-Brand · Januar bis Juni 2026<span class="punkt">.</span></h1>
+  <p class="meta">1.308 Retouren-Positionen aus 5.200 Bestellungen ·
+     Datenstand 2026-07-05</p>
+
+  <div class="kacheln"><div class="kachel"><div class="klabel">Retouren nach Menge</div><div class="kwert">15,9 %</div><div class="zusatz">Beta-Quote</div></div><div class="kachel"><div class="klabel">Retouren nach Wert</div><div class="kwert">17,7 %</div><div class="zusatz">Gamma-Quote</div></div><div class="kachel"><div class="klabel">Bestellungen mit Retoure</div><div class="kwert">22,4 %</div><div class="zusatz">5.200 Bestellungen</div></div><div class="kachel akzent"><div class="klabel">Kosten der Top-Artikel</div><div class="kwert">30.552 EUR</div><div class="zusatz">erstattet, Prozess, Wertverlust</div></div></div>
+
+  <h2>Was sonst untergegangen wäre</h2>
+  <p class="hint">Befunde, die ein normaler Retouren-Report strukturell nicht zeigt.</p>
+  <div class="flecken"><article class="fleck"><h3>Die Retourenquote sieht aus, als wuerde sie sinken. Tut sie nicht.</h3><p class="befund">Reife Kohorten liegen im Schnitt bei 17.6%, die juengste Kohorte 2026-06 zeigt 9.0%. Differenz 8.6% Punkte, allein durch fehlende Reife.</p><p class="warum"><span class="warum-lbl">Warum das im Standard-Report fehlt</span>Wer Retouren eines Monats durch Verkaeufe desselben Monats teilt, misst junge Bestellungen mit, deren Rueckgabefrist noch laeuft. Der Report zeigt eine Verbesserung, die nur ein Zeitversatz ist.</p></article><article class="fleck"><h3>Artikel mit normaler Quote, die trotzdem viel Geld kosten</h3><p class="befund">Zip-Hoodie Heavy (HOOD-ZP-XS-SCH): Quote 16,9 %, Kosten 3.824 EUR.</p><p class="warum"><span class="warum-lbl">Warum das im Standard-Report fehlt</span>Standard-Reports ranken nach Quote. Ein Artikel mit durchschnittlicher Quote, aber hohem Volumen oder Preis faellt dort nie auf, kostet aber mehr als die Ausreisser.</p></article><article class="fleck"><h3>Ein Merkmal, das erst in der Kreuzung auffaellt</h3><p class="befund">Rechnungskauf: 70,2 % der nicht abgeholten Sendungen, aber nur 29,0 % des Gesamtgeschäfts.</p><p class="warum"><span class="warum-lbl">Warum das im Standard-Report fehlt</span>In der Gesamtsicht liegen alle Zahlarten dicht beieinander, da ist nichts zu sehen. Erst wenn man nur die nicht abgeholten Sendungen anschaut, kippt das Bild deutlich.</p></article><article class="fleck"><h3>Ein relevanter Teil der Retouren hat keinen brauchbaren Grund</h3><p class="befund">150 Retouren, 11,5 % aller Fälle.</p><p class="warum"><span class="warum-lbl">Warum das im Standard-Report fehlt</span>Leere und Sonstiges-Gruende landen im Report als Restposten und werden nicht weiter angeschaut. Dahinter steckt haeufig ein eigener Fall, etwa nicht abgeholte Sendungen oder ein Prozessfehler.</p></article><article class="fleck"><h3>Artikel, die brutto verdienen und nach Retouren fast nichts uebrig lassen</h3><p class="befund">Regenjacke Tech (JKT-RN-L-WEI): 2.944 EUR vor Retouren, -907 EUR danach.</p><p class="warum"><span class="warum-lbl">Warum das im Standard-Report fehlt</span>Retourenkosten stehen in der Regel nicht am Artikel. In der Sortimentsauswertung sieht der Artikel gesund aus.</p></article></div>
+
+  <h2>Retourenquote je Bestellmonat</h2>
+  <p class="hint">Zugeordnet nach Bestellung, nicht nach Retourendatum. Schraffierte Monate sind noch
+     nicht vollständig, ihre Quote sieht besser aus als sie ist.</p>
+  <svg viewBox="0 0 528 252" role="img" class="chart"><defs><pattern id="unreif" width="7" height="7" patternTransform="rotate(45)" patternUnits="userSpaceOnUse"><rect width="7" height="7" fill="var(--serie)" opacity="0.28"/><line x1="0" y1="0" x2="0" y2="7" stroke="var(--serie)" stroke-width="3"/></pattern></defs><g class="mark"><title>2026-01: 17,0 %</title><rect x="0" y="21.7" width="62" height="168.3" rx="4" fill="var(--serie)"/></g><text x="31.0" y="12.7" class="val mitte">17,0 %</text><text x="31.0" y="210" class="lbl mitte">01.26</text><g class="mark"><title>2026-02: 16,6 %</title><rect x="88" y="26.4" width="62" height="163.6" rx="4" fill="var(--serie)"/></g><text x="119.0" y="17.4" class="val mitte">16,6 %</text><text x="119.0" y="210" class="lbl mitte">02.26</text><g class="mark"><title>2026-03: 19,2 %</title><rect x="176" y="0.0" width="62" height="190.0" rx="4" fill="var(--serie)"/></g><text x="207.0" y="-9.0" class="val mitte">19,2 %</text><text x="207.0" y="210" class="lbl mitte">03.26</text><g class="mark"><title>2026-04: 17,0 % (unvollständig)</title><rect x="264" y="21.8" width="62" height="168.2" rx="4" fill="url(#unreif)"/></g><text x="295.0" y="12.8" class="val mitte">17,0 %</text><text x="295.0" y="210" class="lbl mitte">04.26</text><text x="295.0" y="228" class="mini mitte">unvollständig</text><g class="mark"><title>2026-05: 16,7 % (unvollständig)</title><rect x="352" y="25.3" width="62" height="164.7" rx="4" fill="url(#unreif)"/></g><text x="383.0" y="16.3" class="val mitte">16,7 %</text><text x="383.0" y="210" class="lbl mitte">05.26</text><text x="383.0" y="228" class="mini mitte">unvollständig</text><g class="mark"><title>2026-06: 9,0 % (unvollständig)</title><rect x="440" y="100.8" width="62" height="89.2" rx="4" fill="url(#unreif)"/></g><text x="471.0" y="91.8" class="val mitte">9,0 %</text><text x="471.0" y="210" class="lbl mitte">06.26</text><text x="471.0" y="228" class="mini mitte">unvollständig</text></svg>
+
+  <h2>Was die Retouren kostet</h2>
+  <p class="hint">Erstattung plus Prozesskosten plus Wertverlust je Artikelvariante.
+     Orange markiert: verdient nach Retouren nichts mehr.</p>
+  <svg viewBox="0 0 706 288" role="img" class="chart"><text x="0" y="18.2" class="lbl">Regenjacke Tech · WEI</text><g class="mark"><title>Regenjacke Tech · WEI: 3.851 EUR</title><rect x="176" y="0" width="430.0" height="26" rx="4" fill="#F2653C"/></g><text x="616.0" y="18.2" class="val">3.851 EUR</text><text x="0" y="54.2" class="lbl">Zip-Hoodie Heavy · SCH</text><g class="mark"><title>Zip-Hoodie Heavy · SCH: 3.824 EUR</title><rect x="176" y="36" width="427.0" height="26" rx="4" fill="var(--serie)"/></g><text x="613.0" y="54.2" class="val">3.824 EUR</text><text x="0" y="90.2" class="lbl">Regenjacke Tech · SCH</text><g class="mark"><title>Regenjacke Tech · SCH: 3.416 EUR</title><rect x="176" y="72" width="381.4" height="26" rx="4" fill="#F2653C"/></g><text x="567.4" y="90.2" class="val">3.416 EUR</text><text x="0" y="126.2" class="lbl">Zip-Hoodie Heavy · SCH</text><g class="mark"><title>Zip-Hoodie Heavy · SCH: 3.209 EUR</title><rect x="176" y="108" width="358.3" height="26" rx="4" fill="var(--serie)"/></g><text x="544.3" y="126.2" class="val">3.209 EUR</text><text x="0" y="162.2" class="lbl">Regenjacke Tech · SCH</text><g class="mark"><title>Regenjacke Tech · SCH: 3.118 EUR</title><rect x="176" y="144" width="348.1" height="26" rx="4" fill="#F2653C"/></g><text x="534.1" y="162.2" class="val">3.118 EUR</text><text x="0" y="198.2" class="lbl">Regenjacke Tech · WEI</text><g class="mark"><title>Regenjacke Tech · WEI: 2.850 EUR</title><rect x="176" y="180" width="318.2" height="26" rx="4" fill="#F2653C"/></g><text x="504.2" y="198.2" class="val">2.850 EUR</text><text x="0" y="234.2" class="lbl">Regenjacke Tech · SCH</text><g class="mark"><title>Regenjacke Tech · SCH: 2.636 EUR</title><rect x="176" y="216" width="294.3" height="26" rx="4" fill="var(--serie)"/></g><text x="480.3" y="234.2" class="val">2.636 EUR</text><text x="0" y="270.2" class="lbl">Zip-Hoodie Heavy · WEI</text><g class="mark"><title>Zip-Hoodie Heavy · WEI: 2.597 EUR</title><rect x="176" y="252" width="290.0" height="26" rx="4" fill="var(--serie)"/></g><text x="476.0" y="270.2" class="val">2.597 EUR</text></svg>
+
+  <h2>Retourengründe</h2>
+  <p class="hint">Orange markiert: Gründe, hinter denen sich ein eigener Fall verbergen kann.</p>
+  <svg viewBox="0 0 788 288" role="img" class="chart"><text x="0" y="18.2" class="lbl">farbe optik gefaellt nicht</text><g class="mark"><title>farbe optik gefaellt nicht: 252</title><rect x="258" y="0" width="430.0" height="26" rx="4" fill="var(--serie)"/></g><text x="698.0" y="18.2" class="val">252</text><text x="0" y="54.2" class="lbl">zu klein</text><g class="mark"><title>zu klein: 226</title><rect x="258" y="36" width="385.6" height="26" rx="4" fill="var(--serie)"/></g><text x="653.6" y="54.2" class="val">226</text><text x="0" y="90.2" class="lbl">sonstiges unbekannt</text><g class="mark"><title>sonstiges unbekannt: 150</title><rect x="258" y="72" width="256.0" height="26" rx="4" fill="#F2653C"/></g><text x="524.0" y="90.2" class="val">150</text><text x="0" y="126.2" class="lbl">nicht abgeholt annahme verweigert</text><g class="mark"><title>nicht abgeholt annahme verweigert: 149</title><rect x="258" y="108" width="254.2" height="26" rx="4" fill="#F2653C"/></g><text x="522.2" y="126.2" class="val">149</text><text x="0" y="162.2" class="lbl">zu gross</text><g class="mark"><title>zu gross: 135</title><rect x="258" y="144" width="230.4" height="26" rx="4" fill="var(--serie)"/></g><text x="498.4" y="162.2" class="val">135</text><text x="0" y="198.2" class="lbl">nicht wie beschrieben</text><g class="mark"><title>nicht wie beschrieben: 102</title><rect x="258" y="180" width="174.0" height="26" rx="4" fill="var(--serie)"/></g><text x="442.0" y="198.2" class="val">102</text><text x="0" y="234.2" class="lbl">reue nicht benoetigt</text><g class="mark"><title>reue nicht benoetigt: 88</title><rect x="258" y="216" width="150.2" height="26" rx="4" fill="var(--serie)"/></g><text x="418.2" y="234.2" class="val">88</text><text x="0" y="270.2" class="lbl">qualitaet defekt</text><g class="mark"><title>qualitaet defekt: 82</title><rect x="258" y="252" width="139.9" height="26" rx="4" fill="var(--serie)"/></g><text x="407.9" y="270.2" class="val">82</text></svg>
+
+  <h2>Nicht abgeholte Sendungen</h2><p class='hint'>94 Sendungen, 9.825 EUR Umsatz plus 940 EUR Prozesskosten. Der Kontrast zeigt sich erst, wenn man nur diese Fälle betrachtet.</p><svg viewBox="0 0 729 72" role="img" class="chart"><text x="0" y="18.2" class="lbl">Anteil am Gesamtgeschäft</text><g class="mark"><title>Anteil am Gesamtgeschäft: 29,0 %</title><rect x="199" y="0" width="177.7" height="26" rx="4" fill="var(--serie)"/></g><text x="386.7" y="18.2" class="val">29,0 %</text><text x="0" y="54.2" class="lbl">Anteil bei nicht abgeholt</text><g class="mark"><title>Anteil bei nicht abgeholt: 70,2 %</title><rect x="199" y="36" width="430.0" height="26" rx="4" fill="#F2653C"/></g><text x="639.0" y="54.2" class="val">70,2 %</text></svg>
+
+  <h2>Größenbedingte Retouren je Größe</h2><p class='hint'>Hoodie Classic: 114 mal zu klein gegen 6 mal zu groß. Der Artikel faellt klein aus.</p><svg viewBox="0 0 680 180" role="img" class="chart"><text x="0" y="18.2" class="lbl">Größe L</text><g class="mark"><title>Größe L: 30</title><rect x="150" y="0" width="430.0" height="26" rx="4" fill="var(--serie)"/></g><text x="590.0" y="18.2" class="val">30</text><text x="0" y="54.2" class="lbl">Größe M</text><g class="mark"><title>Größe M: 25</title><rect x="150" y="36" width="358.3" height="26" rx="4" fill="var(--serie)"/></g><text x="518.3" y="54.2" class="val">25</text><text x="0" y="90.2" class="lbl">Größe S</text><g class="mark"><title>Größe S: 22</title><rect x="150" y="72" width="315.3" height="26" rx="4" fill="var(--serie)"/></g><text x="475.3" y="90.2" class="val">22</text><text x="0" y="126.2" class="lbl">Größe XL</text><g class="mark"><title>Größe XL: 22</title><rect x="150" y="108" width="315.3" height="26" rx="4" fill="var(--serie)"/></g><text x="475.3" y="126.2" class="val">22</text><text x="0" y="162.2" class="lbl">Größe XS</text><g class="mark"><title>Größe XS: 15</title><rect x="150" y="144" width="215.0" height="26" rx="4" fill="var(--serie)"/></g><text x="375.0" y="162.2" class="val">15</text></svg>
+
+  <h2>Artikel im Detail</h2>
+  <p class="hint">Dieselben Zahlen als Tabelle, damit sie kopierbar und prüfbar sind.</p>
+  <table><thead><tr><th>Artikel</th><th>Variante</th><th class="zahl">Retouren</th>
+    <th class="zahl">Kosten</th><th class="zahl">DB nach Retouren</th></tr></thead><tbody>
+    <tr><td>Regenjacke Tech</td><td><code>JKT-RN-L-WEI</code></td><td class="zahl">29</td><td class="zahl">3.851 EUR</td><td class="zahl neg">-907 EUR</td></tr><tr><td>Zip-Hoodie Heavy</td><td><code>HOOD-ZP-XS-SCH</code></td><td class="zahl">38</td><td class="zahl">3.824 EUR</td><td class="zahl">10.103 EUR</td></tr><tr><td>Regenjacke Tech</td><td><code>JKT-RN-XL-SCH</code></td><td class="zahl">25</td><td class="zahl">3.416 EUR</td><td class="zahl neg">-5 EUR</td></tr><tr><td>Zip-Hoodie Heavy</td><td><code>HOOD-ZP-S-SCH</code></td><td class="zahl">31</td><td class="zahl">3.209 EUR</td><td class="zahl">9.171 EUR</td></tr><tr><td>Regenjacke Tech</td><td><code>JKT-RN-S-SCH</code></td><td class="zahl">24</td><td class="zahl">3.118 EUR</td><td class="zahl neg">-102 EUR</td></tr><tr><td>Regenjacke Tech</td><td><code>JKT-RN-M-WEI</code></td><td class="zahl">20</td><td class="zahl">2.850 EUR</td><td class="zahl neg">-122 EUR</td></tr><tr><td>Regenjacke Tech</td><td><code>JKT-RN-XS-SCH</code></td><td class="zahl">19</td><td class="zahl">2.636 EUR</td><td class="zahl">415 EUR</td></tr><tr><td>Zip-Hoodie Heavy</td><td><code>HOOD-ZP-L-WEI</code></td><td class="zahl">26</td><td class="zahl">2.597 EUR</td><td class="zahl">9.535 EUR</td></tr><tr><td>Zip-Hoodie Heavy</td><td><code>HOOD-ZP-L-SCH</code></td><td class="zahl">26</td><td class="zahl">2.597 EUR</td><td class="zahl">9.535 EUR</td></tr><tr><td>Zip-Hoodie Heavy</td><td><code>HOOD-ZP-M-SCH</code></td><td class="zahl">24</td><td class="zahl">2.454 EUR</td><td class="zahl">10.050 EUR</td></tr>
+  </tbody></table>
+
+  <div class="fuss">
+    <strong>Annahmen</strong><ul><li>Prozesskostensatz 10.00 EUR je Retouren-Vorgang (EHI-Kernbereich 5 bis 20 EUR, kalibrierbar)</li><li>Rueckgabefenster 60 Tage, Reifepuffer 21 Tage</li><li>Mindest-N je SKU: 3 Retouren</li></ul>
+    <strong>Was mit weiteren Spalten möglich wäre</strong><ul><li><code>delivered_date</code> würde ermöglichen: Wardrobing-Fenster und Latenz ab Zustellung</li><li><code>batch</code> würde ermöglichen: Chargen-Zuordnung exakt (aktuell nur zeitliche Naeherung)</li><li><code>refund_type</code> würde ermöglichen: Revenue-Recovery-Rate (Exchange vs. Refund)</li><li><code>condition</code> würde ermöglichen: Wertverlust real statt Annahme</li></ul>
+    <p>Jede Zahl stammt aus <code>analysis.json</code>. Nichts davon ist geschätzt.</p>
+  </div>
+</div>
+</body></html>
