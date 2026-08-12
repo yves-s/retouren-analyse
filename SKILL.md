@@ -40,8 +40,10 @@ Schreib den Report aus `analysis.json` in dieser Struktur:
    - `hypothesis`: plausible Deutung, aus den Daten allein nicht beweisbar
    - `needs_data`: erst mit zusätzlicher Spalte oder Quelle prüfbar
 4. **Was sonst untergegangen wäre:** der Abschnitt `blinde_flecken` aus der Analyse. Das sind Befunde, die ein normaler Retouren-Report strukturell nicht zeigt, etwa ein Scheintrend durch unreife Kohorten, ein Merkmal das erst in der Kreuzung auffällt, oder ein Artikel der brutto verdient und nach Retouren nichts übrig lässt. Je Befund immer beides sagen: was da ist, und warum es im Standard-Report unsichtbar bleibt. Dieser Abschnitt ist der eigentliche Grund, warum jemand die Analyse fährt; schreib ihn nicht als Fußnote.
-5. **Maßnahmen:** je bestätigtem Muster die Maßnahmen aus `reference/massnahmen.md`, priorisiert nach Euro-Impact, mit Owner-Vorschlag (Shop, Einkauf, Logistik, Finance).
-6. **Annahmen und fehlende Daten:** alle Default-Annahmen (Prozesskostensatz usw.) und alles, was mit weiteren Spalten möglich würde.
+5. **Maßnahmen:** je bestätigtem Muster eine Maßnahme im Format aus `reference/massnahmen.md`. Pflichtfelder je Maßnahme: Was passiert, Warum es zählt, Größe des Hebels in Euro, Was zu tun ist (nummerierte Schritte), Aufwand, Wer, Woran du merkst dass es wirkt, Was dabei nicht kaputtgehen darf. Reihenfolge nach Geld und Aufwand: teuer und schnell zuerst.
+6. **Was auffällig aussieht, aber in Ordnung ist:** Pflichtabschnitt. Nenne mindestens zwei Dinge, die du geprüft und für unbedenklich befunden hast, mit der Zahl dazu (etwa Kanäle oder Zahlarten, die dicht beieinander liegen). Bleibt der Abschnitt leer, hast du nicht genau genug hingeschaut. Er verhindert, dass jede Zahl zum Problem erklärt wird.
+7. **Offene Fragen:** was du aus den Daten allein nicht entscheiden kannst und der Mensch beantworten muss (etwa ob ein Ausschlag eine Charge war oder eine Kampagne). Fragen stellen statt behaupten.
+8. **Annahmen und fehlende Daten:** alle Default-Annahmen (Prozesskostensatz usw.) und alles, was mit weiteren Spalten möglich würde.
 
 ## Guardrails (hart)
 
@@ -51,6 +53,9 @@ Schreib den Report aus `analysis.json` in dieser Struktur:
 - Eine strengere Retouren-Policy ist niemals die Default-Empfehlung.
 - Keine Konversions- oder Ersparnis-Versprechen ("spart X Prozent"). Impact immer als "bis zu, wenn Muster abgestellt" mit der Zahl aus den Daten.
 - Jede Zahl im Report muss in analysis.json stehen. Fehlt sie dort, gehört sie nicht in den Report.
+- Eine Ursache ergibt eine Maßnahme. Sechs auffällige Varianten desselben Artikels sind ein Größenproblem, nicht sechs Aufgaben.
+- Jede Maßnahme bekommt eine Gegen-Kennzahl. Fast jeder Retouren-Hebel kann Conversion oder Umsatz kosten.
+- Eine benannte Lücke ist eine vollständige Antwort. Nie eine Zahl schätzen, damit der Report rund wirkt.
 
 ## Demo
 
