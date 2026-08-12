@@ -259,7 +259,7 @@ def analyze(returns_rows, sales_rows, args):
         if total >= 25 and max(klein, gross) >= 3 * max(1, min(klein, gross)):
             size_runners.append({
                 "style": style, "zu_klein": klein, "zu_gross": gross,
-                "richtung": "faellt klein aus" if klein > gross else "faellt gross aus",
+                "richtung": "fällt klein aus" if klein > gross else "fällt groß aus",
                 "je_groesse": {s: dict(c) for s, c in sorted(sizes.items())},
             })
     size_runners.sort(key=lambda e: e["zu_klein"] + e["zu_gross"], reverse=True)
