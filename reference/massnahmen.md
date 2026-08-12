@@ -36,7 +36,8 @@ Immer diese Felder, immer in dieser Reihenfolge. Ein Report ohne Maßnahmen ist 
 1. Hinweis direkt an der Größenauswahl der Produktseite, nicht in der Größentabelle versteckt ("fällt klein aus, wir empfehlen eine Größe größer").
 2. Maße des Artikels gegen die eigene Größentabelle prüfen. Weicht der Artikel ab, ist die Tabelle das Problem, nicht der Kunde.
 3. Bei durchgehender Abweichung über alle Größen: Gradierung mit dem Lieferanten klären, das ist ein Produktionsthema.
-4. Erst danach über Größenberater oder Fit-Finder nachdenken. Werkzeug ohne saubere Maße verschiebt das Problem nur.
+4. Größenberater-Software zuletzt, und mit klaren Erwartungen. Sie ist nach der Datenlage in erster Linie ein Conversion-Werkzeug, kein Retouren-Werkzeug (siehe Effektstärken unten). Wer sie kauft, um Retouren zu senken, kauft womöglich das Falsche.
+5. Modelmaße plus getragene Größe an den Artikel schreiben. Laut Baymard fehlen ausreichende Größenangaben auf über 80 Prozent der Bekleidungs-Shops. Das ist die billigste Lücke im Feld.
 
 **Aufwand:** Schritt 1 ist S, Schritt 2 ist M, Schritt 3 ist L mit Lieferanten-Abhängigkeit.
 **Wer:** Shop und Content für 1 und 2, Einkauf für 3.
@@ -72,11 +73,14 @@ Immer diese Felder, immer in dieser Reihenfolge. Ein Report ohne Maßnahmen ist 
 **Einschränkung:** Ohne Chargenspalte ist die Zuordnung eine zeitliche Näherung, kein Beweis. Das gehört so in den Report.
 
 ### Erwartungs-Mismatch (Foto oder Beschreibung passt nicht)
+**Achtung, hier ist der Reflex falsch:** Mehr Bilder sind kein sicherer Hebel. In der einzigen Studie, die einzelne Bildfunktionen gegen Retouren testet (De, Hu, Rahman 2013, Information Systems Research), senkte die Zoom-Funktion die Retouren, während zusätzliche alternative Ansichten sie **erhöhten**. Farb-Swatches hatten keinen Effekt. Die plausible Erklärung: Zoom liefert Materialinformation, weitere Ansichten liefern vor allem Kaufanreiz.
+
 **Was zu tun ist:**
-1. Produktfotos gegen den echten Artikel halten: Farbtreue, Maßstab, Material, Anwendungssituation.
-2. Beschreibung um genau die Angaben ergänzen, die in den Retourengründen fehlen (Materialstärke, Passform, Maße am Modell).
-3. Bewertungen und Freitext-Retourengründe nach wiederkehrenden Formulierungen durchsehen, das ist die billigste Quelle für den Fix.
-4. Bei Marktplatz-Kanälen prüfen, ob dort dieselben Bilder und Texte laufen.
+1. Zoom und Materialdarstellung verbessern, statt die Bilderzahl zu erhöhen. Am besten belegt für Stoffwahrnehmung: ein kurzes Video, in dem Hände den Stoff dehnen und knüllen (Creusen, Shen, Wijntjes 2025). Gemessen wurde dort allerdings die Wahrnehmungsgenauigkeit, nicht die Retourenquote.
+2. Kundenfotos im Nutzungskontext fördern und sichtbar machen. Sie senken Retouren stärker als Produktfotos ohne Kontext und stärker als reiner Text (Wang, Kim, Ghoshal 2026).
+3. Beschreibung um genau die Angaben ergänzen, die in den Retourengründen fehlen (Materialstärke, Passform, Maße am Modell).
+4. Freitext-Retourengründe und Bewertungen nach wiederkehrenden Formulierungen durchsehen, das ist die billigste Quelle für den Fix.
+5. Bei Marktplatz-Kanälen prüfen, ob dort dieselben Bilder und Texte laufen.
 
 **Aufwand:** S bis M je Artikel.
 **Wer:** Content und Shop.
@@ -134,3 +138,33 @@ Diese Zahlen dienen der Kalibrierung, nicht der Prognose. Sie stammen aus einem 
 **Nicht zitieren:** Zahlen wie "18 Prozent Rückgang" oder "bis zu 64 Prozent weniger größenbedingte Retouren" stammen von Anbietern von Größenberatungs-Software ohne offengelegte Methodik.
 
 **Faustregel:** Realistisch sind einstellige relative Senkungen je Maßnahme, nicht zweistellige.
+
+## Was die Datenlage über Größenberatungs-Software sagt
+
+Drei unabhängige Befunde zeigen in dieselbe Richtung, und sie widersprechen dem, was die Anbieter verkaufen:
+
+- **Zalandos eigener A/B-Test** (über 300.000 Kunden je Gruppe): Die personalisierte Größenempfehlung brachte Conversion plus 2,1 Prozent, mehr Artikel im Warenkorb und mehr Umsatz je Besuch, aber **keine statistisch signifikante Senkung der größenbedingten Retouren** (unter 0,5 Prozent relativ). Der simple artikelbezogene Hinweis dagegen wirkte (3,8 bis 8,2 Prozent).
+- **Fit Analytics**, einer der großen Anbieter, nennt in elf öffentlichen Case Studies elfmal die Conversion und nur fünfmal eine Retourensenkung. Das Muster spricht für sich.
+- **Patel, Karlsson, Oghazi 2025** (Journal of Innovation & Knowledge, 496.365 Artikel über sieben Jahre): Kunden, die den Größenberater nutzten, retournierten **0,65 Prozent häufiger**, nicht seltener. Dafür stieg ihr Customer Lifetime Value deutlich. Nicht kausal, Selbstselektion plausibel, aber ein klares Signal gegen die einfache Erzählung.
+
+Fazit für die Empfehlung: Größenberater kaufen ist eine Conversion-Entscheidung. Wer Retouren senken will, korrigiert erst den Artikel und seine Angaben.
+
+## Vergleichs-Benchmarks für Effektgrößen
+
+Damit eine Zahl einordbar wird, hier gemessene Effekte anderer Retouren-Maßnahmen:
+
+| Maßnahme | Gemessener Effekt | Quelle |
+|---|---|---|
+| Umwelt-Hinweis (Green Nudge) | minus 2,6 Prozent Retouren ohne Umsatzverlust, n = 117.304 | von Zahn u.a., Marketing Science |
+| Umwelt-Kosten-Hinweis im Warenkorb | minus 2,1 Prozent Mehrgrößen-Bestellungen, Umsatz unverändert | RESOLVE-Feldtest mit OTTO |
+| Artikelbezogener Größenhinweis | minus 3,8 bis 8,2 Prozent größenbedingte Retouren | Zalando, KDD 2021 |
+| Newsletter, Kataloge, Paid Search, Free Shipping | **erhöhen** Retouren um bis zu 18 Prozent | El Kihal & Shehu, Journal of Retailing |
+| Kauf im Laden statt online | minus 12,6 Prozent Retourenwahrscheinlichkeit | Sahoo u.a., Information Systems Research |
+
+**Einordnungsregel:** Einstellige relative Senkungen je Maßnahme sind realistisch. Alles jenseits von 20 Prozent ohne Kontrollgruppe ist Marketing.
+
+## Woran sich die Priorisierung ausrichtet
+
+Retourengründe im deutschen Onlinehandel (Bitkom Research 2024, 1.050 Online-Shopper, Mehrfachnennung): Größe passte nicht 67 Prozent, Produkt defekt 56 Prozent, gefiel nicht 50 Prozent, **entsprach nicht dem Bild oder der Beschreibung 41 Prozent**, bewusst zu viel bestellt 29 Prozent.
+
+Größe und Erwartungs-Mismatch sind damit die beiden großen Blöcke. Genau dort setzen die ersten beiden Maßnahmen an.
