@@ -26,6 +26,8 @@ Immer diese Felder, immer in dieser Reihenfolge. Ein Report ohne Maßnahmen ist 
 - **Strengere Rückgabebedingungen sind niemals die Standardempfehlung.** Sie senken die Quote und den Umsatz gleich mit.
 - **Lücke benennen statt schätzen.** Fehlt eine Spalte, wird gesagt, was damit möglich wäre. Eine erfundene Zahl ist schlimmer als eine fehlende.
 - **Immer eine Gegen-Kennzahl mitgeben.** Fast jede Retouren-Maßnahme kann die Conversion kosten. Wer das nicht mitmisst, optimiert sich in den Umsatzverlust.
+- **Höchstens fünf Maßnahmen.** Alles darunter kommt in einen Block "Beobachten". Eine Liste mit zwanzig Empfehlungen wird nicht umgesetzt.
+- **Effekt-Schätzungen nur mit sichtbarer Rechnung und markierter Herkunft.** Wenn ein Fremd-Benchmark als Faktor einfließt, muss dabeistehen, aus welchem Kontext er stammt und dass er keine Prognose für diesen Shop ist. Ohne Beleg lieber nur die Kostenzahl aus den eigenen Daten nennen.
 
 ## Die Maßnahmen je Muster
 
@@ -40,7 +42,7 @@ Immer diese Felder, immer in dieser Reihenfolge. Ein Report ohne Maßnahmen ist 
 **Wer:** Shop und Content für 1 und 2, Einkauf für 3.
 **Woran du merkst, dass es wirkt:** Anteil "zu klein" an den Retouren dieses Artikels, sichtbar in den Bestellungen der nächsten vier bis sechs Wochen (nicht früher, die Retouren laufen nach).
 **Was nicht kaputtgehen darf:** Absatz des Artikels. Ein Hinweis, der abschreckt, senkt die Quote und den Umsatz.
-**Beleg:** Passform ist laut Uni-Bamberg-Retourenforschung der häufigste Retourengrund bei Bekleidung. Laut RESOLVE haben 82 Prozent der untersuchten Händler eine Größenberatung, aber nur 43 Prozent einen artikelbezogenen Hinweis der Art "fällt größer aus". Genau dort liegt der ungenutzte Hebel.
+**Beleg:** Passform ist laut Uni-Bamberg-Retourenforschung der häufigste Retourengrund bei Bekleidung. Laut RESOLVE haben 82 Prozent der untersuchten Händler eine Größenberatung, aber nur 43 Prozent einen artikelbezogenen Hinweis der Art "fällt größer aus". Genau dort liegt der ungenutzte Hebel. Gemessene Effektstärken siehe unten.
 
 ### Nicht abgeholte Sendungen
 **Was zu tun ist:**
@@ -116,3 +118,19 @@ Immer diese Felder, immer in dieser Reihenfolge. Ein Report ohne Maßnahmen ist 
 **Wer:** Einkauf, Entscheidung Geschäftsführung.
 **Woran du merkst, dass es wirkt:** Deckungsbeitrag nach Retouren je Artikel.
 **Was nicht kaputtgehen darf:** Sortimentsbreite und Warenkorbgröße.
+
+## Belegte Effektstärken (für realistische Erwartungen)
+
+Diese Zahlen dienen der Kalibrierung, nicht der Prognose. Sie stammen aus einem anderen Shop-Kontext und dürfen nie als erwartetes Ergebnis für den analysierten Shop ausgegeben werden.
+
+**Größenhinweis am Artikel** (Zalando, KDD 2021, [arXiv:2106.03532](https://arxiv.org/abs/2106.03532), A/B-Tests mit je über 180.000 Personen, peer reviewed, Autoren sind Zalando-Mitarbeitende):
+- Textil: 4,3 Prozent relative Senkung der größenbedingten Retouren bei "fällt klein aus", 6,6 Prozent bei "fällt groß aus". Schuhe: 3,8 Prozent.
+- Über 10.704 Textil-Artikel fortlaufend gemessen: rund 5 Prozent, im Schnitt 1,5 gesparte Retouren je Artikel.
+- **Wichtige Gegenbewegung:** Die Hinweise erhöhten Auswahlbestellungen (zwei Größen im Warenkorb) um 11,1 Prozent bei "zu klein" und 19,0 Prozent bei "zu groß". Genau deshalb ist die Anzahl der Mehrgrößen-Bestellungen die Gegen-Kennzahl dieser Maßnahme. Steigt sie stärker als die Retourenquote fällt, ist die Maßnahme netto negativ.
+- **Überraschender Negativbefund:** Eine personalisierte Größenempfehlung aus der Bestellhistorie brachte Conversion plus 2,1 Prozent, aber keine statistisch signifikante Retourensenkung. Das simple artikelbezogene Flag schlägt die aufwendige Personalisierung.
+
+**Einordnung Gesamtmarkt** ([Uni Bamberg, Pressemitteilung 12/2019](https://www.uni-bamberg.de/presse/pm/artikel/massnahmen-retouren-2019/), Befragung von 139 Händlern): Größenberatung plus standardisierte Größenangaben könnten bis zu 25 Prozent der Retouren einsparen. Das ist eine **Einschätzung der befragten Händler, keine gemessene Wirkung**, und liegt um ein Vielfaches über allem, was tatsächlich gemessen wurde. Als Potenzial-Argument brauchbar, als Erwartung nicht.
+
+**Nicht zitieren:** Zahlen wie "18 Prozent Rückgang" oder "bis zu 64 Prozent weniger größenbedingte Retouren" stammen von Anbietern von Größenberatungs-Software ohne offengelegte Methodik.
+
+**Faustregel:** Realistisch sind einstellige relative Senkungen je Maßnahme, nicht zweistellige.
