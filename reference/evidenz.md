@@ -2,6 +2,8 @@
 
 Gesammelte Ergebnisse aus A/B-Tests, Feldexperimenten und Meta-Analysen zu Retouren im Onlinehandel. Zweck: Empfehlungen an Messungen binden statt an Bauchgefühl, und die kursierenden Zahlen einordnen, die keiner Prüfung standhalten.
 
+Kanonische Fassung dieses Wissens liegt bei Path to AI im WorkOS unter `06-wissen/retouren-evidenz.md`. Änderungen dort zuerst.
+
 **Belegstufen, überall mitgeführt:**
 - **[A] Kausal gemessen:** A/B-Test, randomisiertes Feldexperiment oder sauberes Quasi-Experiment
 - **[B] Beobachtet:** Panel- oder Archivdaten, Korrelation, Wirkungsrichtung nicht gesichert
