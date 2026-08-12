@@ -362,11 +362,13 @@ def build(d, titel):
   {chart_kosten}
 
   <h2>Retourengründe</h2>
-  <p class="hint">Orange markiert: Gründe, hinter denen sich ein eigener Fall verbergen kann.</p>
+  <p class="hint">Gezählt in <strong>Retourenpositionen</strong>, also je zurückgeschicktem Artikel.
+     Eine Sendung mit drei Artikeln zählt hier dreimal. Orange markiert: Gründe, hinter denen sich ein
+     eigener Fall verbergen kann.</p>
   {chart_gruende}
 
   {"<h2>Nicht abgeholte Sendungen: welche Zahlart auffällt</h2><p class='hint'>" +
-   esc(f'{num(np_["sendungen"])} Sendungen kamen ungeöffnet zurück ({eur(np_["verlorener_umsatz"])} Umsatz plus {eur(np_["zusatzkosten_versand_annahme"])} Prozesskosten). Die beiden Balken zeigen dieselbe Zahlart zweimal: wie häufig sie im gesamten Geschäft vorkommt und wie häufig sie unter genau diesen Fällen vorkommt. Je weiter die Balken auseinanderliegen, desto stärker hängt das Nichtabholen mit der Zahlart zusammen.') +
+   esc(f'{num(np_["sendungen"])} Sendungen kamen ungeöffnet zurück, {eur(np_["verlorener_umsatz"])} Umsatz plus {eur(np_["zusatzkosten_versand_annahme"])} Prozesskosten. Achtung bei der Einheit: hier sind Sendungen gezählt, im Gründe-Chart darüber Artikelpositionen. Dieselben Fälle enthalten mehr Artikel als Sendungen. Die beiden Balken zeigen dieselbe Zahlart zweimal: wie häufig sie im gesamten Geschäft vorkommt und wie häufig sie unter genau diesen Sendungen vorkommt. Je weiter die Balken auseinanderliegen, desto stärker hängt das Nichtabholen mit der Zahlart zusammen.') +
    "</p>" + chart_zahlart if chart_zahlart else ""}
 
   {"<h2>Größenbedingte Retouren je Größe</h2><p class='hint'>" +
@@ -409,6 +411,10 @@ def build(d, titel):
     <dt>Ertrag nach Retouren</dt>
     <dd>Was von einer Artikelvariante übrig bleibt, wenn man vom Rohertrag alle Retourenkosten abzieht.
         Negativ heißt: Der Artikel hat im Zeitraum Geld gekostet.</dd>
+    <dt>Position gegen Sendung</dt>
+    <dd>Eine Retourenposition ist ein zurückgeschickter Artikel, eine Sendung ist das Paket dazu.
+        Kommt ein Paket mit drei Artikeln zurück, sind das drei Positionen und eine Sendung. Die
+        Gründe-Auswertung zählt Positionen, die nicht abgeholten Fälle zählen Sendungen.</dd>
     <dt>Retourenkosten</dt>
     <dd>Erstatteter Betrag plus Bearbeitungskosten je Vorgang plus Wertverlust bei defekter Ware.
         Der Bearbeitungssatz ist eine Annahme und unten aufgeführt.</dd>
