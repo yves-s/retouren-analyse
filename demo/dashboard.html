@@ -32,7 +32,7 @@
     text-transform: uppercase; color: var(--gedaempft); }
   .kwert { font-size: 32px; font-weight: 600; letter-spacing: -.02em; margin-top: 6px; }
   .zusatz { font-size: 13px; color: var(--gedaempft); margin-top: 2px; }
-  .befund-karte { background: var(--panel); border: 1px solid var(--linie); margin-bottom: 14px; }
+  .befund-karte { background: var(--panel); border: 1px solid var(--linie); }
   .bk-kopf { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
     padding: 16px 22px; border-bottom: 1px solid var(--linie); }
   .bk-nr { font-family: ui-monospace, monospace; font-size: 12px; color: var(--signal); }
@@ -74,8 +74,11 @@
     font-size: 13.5px; color: var(--gedaempft); }
   .fuss ul { margin: 6px 0 18px; padding-left: 18px; }
   .leer { color: var(--gedaempft); font-size: 14px; }
-  .bk-chart { padding: 22px 22px 6px; border-bottom: 1px solid var(--linie); }
-  .bk-chart .chart { max-width: 760px; }
+  .befund-gruppe { margin-bottom: 42px; }
+  .metrik { padding: 0 0 20px; }
+  .metrik-titel { font-size: 15px; font-weight: 600; margin: 0 0 2px; }
+  .metrik-hint { font-size: 13.5px; color: var(--gedaempft); margin: 0 0 14px; max-width: 720px; }
+  .metrik .chart { max-width: 820px; }
   .warnung { background: var(--moss-flaeche); border-left: 3px solid var(--signal);
     padding: 14px 18px; margin: 10px 0 18px; font-size: 14px; }
   .chart .val-inv { font-size: 12.5px; fill: var(--paper-fest); font-weight: 600; }
@@ -106,13 +109,14 @@
   <p class="hint">Nach Geldwert sortiert. Jeder Block enthält die Zahl, ihre Bedeutung und die
      Maßnahme, damit nichts an anderer Stelle nachgeschlagen werden muss.</p>
   
+        <section class="befund-gruppe">
+        <div class="metrik"><p class="metrik-titel">Retourenkosten je Artikelvariante</p><p class="metrik-hint">Erstattung plus Bearbeitung plus Wertverlust. Orange markiert: Von dem, was die Variante im Verkauf verdient hat, bleibt danach nichts übrig.</p><svg viewBox="0 0 788 288" role="img" class="chart"><text x="0" y="18.2" class="lbl">Regenjacke Tech · JKT-RN-L-WEI</text><g class="mark"><title>Regenjacke Tech · JKT-RN-L-WEI: 3.851 EUR</title><rect x="258" y="0" width="430.0" height="26" rx="4" fill="#F2653C"/></g><text x="698.0" y="18.2" class="val">3.851 EUR</text><text x="0" y="54.2" class="lbl">Zip-Hoodie Heavy · HOOD-ZP-XS-SCH</text><g class="mark"><title>Zip-Hoodie Heavy · HOOD-ZP-XS-SCH: 3.824 EUR</title><rect x="258" y="36" width="427.0" height="26" rx="4" fill="var(--serie)"/></g><text x="695.0" y="54.2" class="val">3.824 EUR</text><text x="0" y="90.2" class="lbl">Regenjacke Tech · JKT-RN-XL-SCH</text><g class="mark"><title>Regenjacke Tech · JKT-RN-XL-SCH: 3.416 EUR</title><rect x="258" y="72" width="381.4" height="26" rx="4" fill="#F2653C"/></g><text x="649.4" y="90.2" class="val">3.416 EUR</text><text x="0" y="126.2" class="lbl">Zip-Hoodie Heavy · HOOD-ZP-S-SCH</text><g class="mark"><title>Zip-Hoodie Heavy · HOOD-ZP-S-SCH: 3.209 EUR</title><rect x="258" y="108" width="358.3" height="26" rx="4" fill="var(--serie)"/></g><text x="626.3" y="126.2" class="val">3.209 EUR</text><text x="0" y="162.2" class="lbl">Regenjacke Tech · JKT-RN-S-SCH</text><g class="mark"><title>Regenjacke Tech · JKT-RN-S-SCH: 3.118 EUR</title><rect x="258" y="144" width="348.1" height="26" rx="4" fill="#F2653C"/></g><text x="616.1" y="162.2" class="val">3.118 EUR</text><text x="0" y="198.2" class="lbl">Regenjacke Tech · JKT-RN-M-WEI</text><g class="mark"><title>Regenjacke Tech · JKT-RN-M-WEI: 2.850 EUR</title><rect x="258" y="180" width="318.2" height="26" rx="4" fill="#F2653C"/></g><text x="586.2" y="198.2" class="val">2.850 EUR</text><text x="0" y="234.2" class="lbl">Regenjacke Tech · JKT-RN-XS-SCH</text><g class="mark"><title>Regenjacke Tech · JKT-RN-XS-SCH: 2.636 EUR</title><rect x="258" y="216" width="294.3" height="26" rx="4" fill="var(--serie)"/></g><text x="562.3" y="234.2" class="val">2.636 EUR</text><text x="0" y="270.2" class="lbl">Zip-Hoodie Heavy · HOOD-ZP-L-WEI</text><g class="mark"><title>Zip-Hoodie Heavy · HOOD-ZP-L-WEI: 2.597 EUR</title><rect x="258" y="252" width="290.0" height="26" rx="4" fill="var(--serie)"/></g><text x="558.0" y="270.2" class="val">2.597 EUR</text></svg></div>
         <article class="befund-karte">
           <div class="bk-kopf">
             <span class="bk-nr">01</span>
             <h3>Regenjacke Tech verdient nach Retouren nichts mehr</h3>
             <span class="bk-hebel">15.870 EUR Retourenkosten im Zeitraum</span>
           </div>
-          <div class="bk-chart"><svg viewBox="0 0 788 288" role="img" class="chart"><text x="0" y="18.2" class="lbl">Regenjacke Tech · JKT-RN-L-WEI</text><g class="mark"><title>Regenjacke Tech · JKT-RN-L-WEI: 3.851 EUR</title><rect x="258" y="0" width="430.0" height="26" rx="4" fill="#F2653C"/></g><text x="698.0" y="18.2" class="val">3.851 EUR</text><text x="0" y="54.2" class="lbl">Zip-Hoodie Heavy · HOOD-ZP-XS-SCH</text><g class="mark"><title>Zip-Hoodie Heavy · HOOD-ZP-XS-SCH: 3.824 EUR</title><rect x="258" y="36" width="427.0" height="26" rx="4" fill="var(--serie)"/></g><text x="695.0" y="54.2" class="val">3.824 EUR</text><text x="0" y="90.2" class="lbl">Regenjacke Tech · JKT-RN-XL-SCH</text><g class="mark"><title>Regenjacke Tech · JKT-RN-XL-SCH: 3.416 EUR</title><rect x="258" y="72" width="381.4" height="26" rx="4" fill="#F2653C"/></g><text x="649.4" y="90.2" class="val">3.416 EUR</text><text x="0" y="126.2" class="lbl">Zip-Hoodie Heavy · HOOD-ZP-S-SCH</text><g class="mark"><title>Zip-Hoodie Heavy · HOOD-ZP-S-SCH: 3.209 EUR</title><rect x="258" y="108" width="358.3" height="26" rx="4" fill="var(--serie)"/></g><text x="626.3" y="126.2" class="val">3.209 EUR</text><text x="0" y="162.2" class="lbl">Regenjacke Tech · JKT-RN-S-SCH</text><g class="mark"><title>Regenjacke Tech · JKT-RN-S-SCH: 3.118 EUR</title><rect x="258" y="144" width="348.1" height="26" rx="4" fill="#F2653C"/></g><text x="616.1" y="162.2" class="val">3.118 EUR</text><text x="0" y="198.2" class="lbl">Regenjacke Tech · JKT-RN-M-WEI</text><g class="mark"><title>Regenjacke Tech · JKT-RN-M-WEI: 2.850 EUR</title><rect x="258" y="180" width="318.2" height="26" rx="4" fill="#F2653C"/></g><text x="586.2" y="198.2" class="val">2.850 EUR</text><text x="0" y="234.2" class="lbl">Regenjacke Tech · JKT-RN-XS-SCH</text><g class="mark"><title>Regenjacke Tech · JKT-RN-XS-SCH: 2.636 EUR</title><rect x="258" y="216" width="294.3" height="26" rx="4" fill="var(--serie)"/></g><text x="562.3" y="234.2" class="val">2.636 EUR</text><text x="0" y="270.2" class="lbl">Zip-Hoodie Heavy · HOOD-ZP-L-WEI</text><g class="mark"><title>Zip-Hoodie Heavy · HOOD-ZP-L-WEI: 2.597 EUR</title><rect x="258" y="252" width="290.0" height="26" rx="4" fill="var(--serie)"/></g><text x="558.0" y="270.2" class="val">2.597 EUR</text></svg></div>
           <div class="bk-body">
             <div class="bk-spalte">
               <p class="mini-lbl">Was in den Daten steht</p>
@@ -133,13 +137,15 @@
             </div>
           </div>
         </article>
+        </section>
+        <section class="befund-gruppe">
+        <div class="metrik"><p class="metrik-titel">Rechnungskauf: normal gegen auffällig</p><p class="metrik-hint">Dieselbe Zahlart zweimal gemessen. Je weiter die Balken auseinanderliegen, desto stärker hängt das Nichtabholen mit ihr zusammen.</p><svg viewBox="0 0 860 72" role="img" class="chart"><text x="0" y="18.2" class="lbl">Rechnungskauf: Anteil an allen Bestellungen</text><g class="mark"><title>Rechnungskauf: Anteil an allen Bestellungen: 29,0 %</title><rect x="330" y="0" width="177.7" height="26" rx="4" fill="var(--serie)"/></g><text x="517.7" y="18.2" class="val">29,0 %</text><text x="0" y="54.2" class="lbl">Rechnungskauf: Anteil an den nicht abgeholten</text><g class="mark"><title>Rechnungskauf: Anteil an den nicht abgeholten: 70,2 %</title><rect x="330" y="36" width="430.0" height="26" rx="4" fill="#F2653C"/></g><text x="770.0" y="54.2" class="val">70,2 %</text></svg></div>
         <article class="befund-karte">
           <div class="bk-kopf">
             <span class="bk-nr">02</span>
             <h3>Sendungen, die nie abgeholt wurden</h3>
             <span class="bk-hebel">9.825 EUR Umsatz plus 940 EUR Prozesskosten</span>
           </div>
-          <div class="bk-chart"><svg viewBox="0 0 860 72" role="img" class="chart"><text x="0" y="18.2" class="lbl">Rechnungskauf: Anteil an allen Bestellungen</text><g class="mark"><title>Rechnungskauf: Anteil an allen Bestellungen: 29,0 %</title><rect x="330" y="0" width="177.7" height="26" rx="4" fill="var(--serie)"/></g><text x="517.7" y="18.2" class="val">29,0 %</text><text x="0" y="54.2" class="lbl">Rechnungskauf: Anteil an den nicht abgeholten</text><g class="mark"><title>Rechnungskauf: Anteil an den nicht abgeholten: 70,2 %</title><rect x="330" y="36" width="430.0" height="26" rx="4" fill="#F2653C"/></g><text x="770.0" y="54.2" class="val">70,2 %</text></svg></div>
           <div class="bk-body">
             <div class="bk-spalte">
               <p class="mini-lbl">Was in den Daten steht</p>
@@ -160,13 +166,15 @@
             </div>
           </div>
         </article>
+        </section>
+        <section class="befund-gruppe">
+        <div class="metrik"><p class="metrik-titel">Hoodie Classic: Retouren &quot;zu klein&quot; je Größe</p><p class="metrik-hint">Verteilt sich das über alle Größen, liegt es am Schnitt des Artikels. Trifft es nur einzelne Größen, ist es die Gradierung.</p><svg viewBox="0 0 680 180" role="img" class="chart"><text x="0" y="18.2" class="lbl">Größe L</text><g class="mark"><title>Größe L: 30</title><rect x="150" y="0" width="430.0" height="26" rx="4" fill="var(--serie)"/></g><text x="590.0" y="18.2" class="val">30</text><text x="0" y="54.2" class="lbl">Größe M</text><g class="mark"><title>Größe M: 25</title><rect x="150" y="36" width="358.3" height="26" rx="4" fill="var(--serie)"/></g><text x="518.3" y="54.2" class="val">25</text><text x="0" y="90.2" class="lbl">Größe S</text><g class="mark"><title>Größe S: 22</title><rect x="150" y="72" width="315.3" height="26" rx="4" fill="var(--serie)"/></g><text x="475.3" y="90.2" class="val">22</text><text x="0" y="126.2" class="lbl">Größe XL</text><g class="mark"><title>Größe XL: 22</title><rect x="150" y="108" width="315.3" height="26" rx="4" fill="var(--serie)"/></g><text x="475.3" y="126.2" class="val">22</text><text x="0" y="162.2" class="lbl">Größe XS</text><g class="mark"><title>Größe XS: 15</title><rect x="150" y="144" width="215.0" height="26" rx="4" fill="var(--serie)"/></g><text x="375.0" y="162.2" class="val">15</text></svg></div>
         <article class="befund-karte">
           <div class="bk-kopf">
             <span class="bk-nr">03</span>
             <h3>Hoodie Classic fällt klein aus</h3>
             <span class="bk-hebel">120 größenbedingte Retouren</span>
           </div>
-          <div class="bk-chart"><svg viewBox="0 0 680 180" role="img" class="chart"><text x="0" y="18.2" class="lbl">Größe L</text><g class="mark"><title>Größe L: 30</title><rect x="150" y="0" width="430.0" height="26" rx="4" fill="var(--serie)"/></g><text x="590.0" y="18.2" class="val">30</text><text x="0" y="54.2" class="lbl">Größe M</text><g class="mark"><title>Größe M: 25</title><rect x="150" y="36" width="358.3" height="26" rx="4" fill="var(--serie)"/></g><text x="518.3" y="54.2" class="val">25</text><text x="0" y="90.2" class="lbl">Größe S</text><g class="mark"><title>Größe S: 22</title><rect x="150" y="72" width="315.3" height="26" rx="4" fill="var(--serie)"/></g><text x="475.3" y="90.2" class="val">22</text><text x="0" y="126.2" class="lbl">Größe XL</text><g class="mark"><title>Größe XL: 22</title><rect x="150" y="108" width="315.3" height="26" rx="4" fill="var(--serie)"/></g><text x="475.3" y="126.2" class="val">22</text><text x="0" y="162.2" class="lbl">Größe XS</text><g class="mark"><title>Größe XS: 15</title><rect x="150" y="144" width="215.0" height="26" rx="4" fill="var(--serie)"/></g><text x="375.0" y="162.2" class="val">15</text></svg></div>
           <div class="bk-body">
             <div class="bk-spalte">
               <p class="mini-lbl">Was in den Daten steht</p>
@@ -187,13 +195,15 @@
             </div>
           </div>
         </article>
+        </section>
+        <section class="befund-gruppe">
+        
         <article class="befund-karte">
           <div class="bk-kopf">
             <span class="bk-nr">04</span>
             <h3>Qualitäts-Ausschlag bei Sneaker Socken 3er-Pack</h3>
             <span class="bk-hebel">33 Retouren in einem Monat, davon der Großteil vermeidbar, wenn der Verdacht stimmt</span>
           </div>
-          
           <div class="bk-body">
             <div class="bk-spalte">
               <p class="mini-lbl">Was in den Daten steht</p>
@@ -214,6 +224,7 @@
             </div>
           </div>
         </article>
+        </section>
 
   <h2>Retourengründe</h2>
   <p class="hint">Gezählt in <strong>Retourenpositionen</strong>, also je zurückgeschicktem Artikel.

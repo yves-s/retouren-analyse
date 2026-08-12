@@ -211,23 +211,32 @@ def build(d, titel):
                  if b.get("beleg") else "")
         einschr = (f'<p class="beleg"><span class="mini-lbl">Einschränkung</span>{esc(b["einschraenkung"])}</p>'
                    if b.get("einschraenkung") else "")
-        chart = ""
+        chart, chart_titel, chart_hint = "", "", ""
         t = b["titel"]
         if "verdient nach Retouren" in t or "unauffällige Quote" in t:
-            chart = chart_kosten
+            chart, chart_titel = chart_kosten, "Retourenkosten je Artikelvariante"
+            chart_hint = ("Erstattung plus Bearbeitung plus Wertverlust. Orange markiert: Von dem, was "
+                          "die Variante im Verkauf verdient hat, bleibt danach nichts übrig.")
         elif "abgeholt" in t:
-            chart = chart_zahlart
+            chart, chart_titel = chart_zahlart, "Rechnungskauf: normal gegen auffällig"
+            chart_hint = ("Dieselbe Zahlart zweimal gemessen. Je weiter die Balken auseinanderliegen, "
+                          "desto stärker hängt das Nichtabholen mit ihr zusammen.")
         elif "fällt" in t and chart_laeufer:
             chart = chart_laeufer
-        chart_block = f'<div class="bk-chart">{chart}</div>' if chart else ""
+            chart_titel = b["titel"].split(" fällt")[0] + ': Retouren "zu klein" je Größe'
+            chart_hint = ("Verteilt sich das über alle Größen, liegt es am Schnitt des Artikels. "
+                          "Trifft es nur einzelne Größen, ist es die Gradierung.")
+        chart_block = (f'<div class="metrik"><p class="metrik-titel">{esc(chart_titel)}</p>'
+                       f'<p class="metrik-hint">{esc(chart_hint)}</p>{chart}</div>') if chart else ""
         karten.append(f"""
+        <section class="befund-gruppe">
+        {chart_block}
         <article class="befund-karte">
           <div class="bk-kopf">
             <span class="bk-nr">{i:02d}</span>
             <h3>{esc(b["titel"])}</h3>
             <span class="bk-hebel">{esc(b["hebel_text"])}</span>
           </div>
-          {chart_block}
           <div class="bk-body">
             <div class="bk-spalte">
               <p class="mini-lbl">Was in den Daten steht</p>
@@ -247,7 +256,8 @@ def build(d, titel):
               </dl>
             </div>
           </div>
-        </article>""")
+        </article>
+        </section>""")
     hebel_summe = sum(b["hebel"] for b in befunde if b["hebel"])
 
     # Retouren ohne Grund sind kein Geschäftsbefund, sondern eine Datenqualitätsaussage.
@@ -320,7 +330,7 @@ def build(d, titel):
     text-transform: uppercase; color: var(--gedaempft); }}
   .kwert {{ font-size: 32px; font-weight: 600; letter-spacing: -.02em; margin-top: 6px; }}
   .zusatz {{ font-size: 13px; color: var(--gedaempft); margin-top: 2px; }}
-  .befund-karte {{ background: var(--panel); border: 1px solid var(--linie); margin-bottom: 14px; }}
+  .befund-karte {{ background: var(--panel); border: 1px solid var(--linie); }}
   .bk-kopf {{ display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
     padding: 16px 22px; border-bottom: 1px solid var(--linie); }}
   .bk-nr {{ font-family: ui-monospace, monospace; font-size: 12px; color: var(--signal); }}
@@ -362,8 +372,11 @@ def build(d, titel):
     font-size: 13.5px; color: var(--gedaempft); }}
   .fuss ul {{ margin: 6px 0 18px; padding-left: 18px; }}
   .leer {{ color: var(--gedaempft); font-size: 14px; }}
-  .bk-chart {{ padding: 22px 22px 6px; border-bottom: 1px solid var(--linie); }}
-  .bk-chart .chart {{ max-width: 760px; }}
+  .befund-gruppe {{ margin-bottom: 42px; }}
+  .metrik {{ padding: 0 0 20px; }}
+  .metrik-titel {{ font-size: 15px; font-weight: 600; margin: 0 0 2px; }}
+  .metrik-hint {{ font-size: 13.5px; color: var(--gedaempft); margin: 0 0 14px; max-width: 720px; }}
+  .metrik .chart {{ max-width: 820px; }}
   .warnung {{ background: var(--moss-flaeche); border-left: 3px solid var(--signal);
     padding: 14px 18px; margin: 10px 0 18px; font-size: 14px; }}
   .chart .val-inv {{ font-size: 12.5px; fill: var(--paper-fest); font-weight: 600; }}
