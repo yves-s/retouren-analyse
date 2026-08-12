@@ -249,7 +249,9 @@ def analyze(returns_rows, sales_rows, args):
         klein = sum(c["zu_klein"] for c in sizes.values())
         gross = sum(c["zu_gross"] for c in sizes.values())
         total = klein + gross
-        if total >= 10 and max(klein, gross) >= 2 * max(1, min(klein, gross)):
+        # Schwelle bewusst hoch: ein Groessen-Laeufer ist ein klares Ungleichgewicht,
+        # kein leichtes Uebergewicht. Sonst wird jeder Artikel gemeldet.
+        if total >= 25 and max(klein, gross) >= 3 * max(1, min(klein, gross)):
             size_runners.append({
                 "style": style, "zu_klein": klein, "zu_gross": gross,
                 "richtung": "faellt klein aus" if klein > gross else "faellt gross aus",

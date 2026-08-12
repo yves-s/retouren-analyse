@@ -16,21 +16,38 @@ from datetime import datetime, timedelta
 random.seed(19)
 
 START = datetime(2026, 1, 1)
-DAYS = 181  # Jan bis Jun 2026
+DAYS = 181  # Bestellungen Jan bis Jun 2026
+
+# Datenstand des Exports. Retouren, die spaeter eintreffen wuerden, existieren noch nicht.
+# Dadurch sind die juengsten Bestell-Kohorten echt unvollstaendig, genau wie in der Praxis,
+# und ihre Quote sieht faelschlich besser aus.
+CUTOFF = datetime(2026, 7, 5)
 
 SIZES = ["XS", "S", "M", "L", "XL"]
 COLORS = ["Schwarz", "Weiss", "Navy", "Oliv"]
 
+# code, name, preis, stueckkosten, retourenwahrscheinlichkeit, verkaufsgewicht, farben
+# Der Zip-Hoodie ist der Bestseller mit unauffaelliger Quote: er taucht in keiner
+# Top-Quoten-Liste auf, kostet aber durch Volumen und Preis am meisten. Genau das
+# ist Muster "teuer trotz normaler Quote".
 STYLES = [
-    ("HOOD-CL", "Hoodie Classic", 69.90, 21.0, 0.30),
-    ("HOOD-ZP", "Zip-Hoodie Heavy", 89.90, 28.0, 0.10),
-    ("TEE-BAS", "T-Shirt Basic", 29.90, 7.5, 0.14),
-    ("TEE-OVS", "T-Shirt Oversized", 34.90, 9.0, 0.16),
-    ("KLEID-PR", "Sommerkleid Print", 79.90, 24.0, 0.24),
-    ("JOG-CL", "Jogger Classic", 64.90, 19.5, 0.18),
-    ("SOCK-3P", "Sneaker Socken 3er-Pack", 19.90, 4.8, 0.05),
-    ("CAP-LG", "Cap Logo", 24.90, 6.0, 0.04),
+    ("HOOD-CL", "Hoodie Classic", 69.90, 21.0, 0.30, 1.0, 4),
+    ("HOOD-ZP", "Zip-Hoodie Heavy", 89.90, 28.0, 0.11, 2.5, 2),
+    # Duenne Marge (30 Prozent): kippt schon bei normaler Retourenquote ins Minus.
+    # Das ist Muster "verdient brutto, nach Retouren nichts mehr".
+    ("JKT-RN", "Regenjacke Tech", 119.90, 84.00, 0.25, 1.0, 2),
+    ("TEE-BAS", "T-Shirt Basic", 29.90, 7.5, 0.14, 1.2, 4),
+    ("TEE-OVS", "T-Shirt Oversized", 34.90, 9.0, 0.16, 1.0, 4),
+    ("KLEID-PR", "Sommerkleid Print", 79.90, 24.0, 0.24, 1.0, 4),
+    ("JOG-CL", "Jogger Classic", 64.90, 19.5, 0.18, 1.0, 4),
+    ("SOCK-3P", "Sneaker Socken 3er-Pack", 19.90, 4.8, 0.05, 1.0, 4),
+    ("CAP-LG", "Cap Logo", 24.90, 6.0, 0.04, 0.8, 4),
 ]
+STYLE_WEIGHTS = [s[5] for s in STYLES]
+
+# Anteil der Retouren, bei denen im ERP kein brauchbarer Grund erfasst wurde.
+# Realistisch und im Report ein eigener Befund, weil sich dahinter Faelle verstecken.
+P_KEIN_GRUND = 0.14
 
 PAYMENTS = [("Rechnungskauf", 0.30), ("PayPal", 0.32), ("Kreditkarte", 0.22), ("Vorkasse", 0.16)]
 CHANNELS = [("Eigener Shop", 0.62), ("Amazon", 0.26), ("Zalando", 0.12)]
@@ -71,8 +88,9 @@ def gen():
 
         order_positions = []
         for _ in range(n_positions):
-            code, name, price, cost, ret_p = random.choice(STYLES)
-            color = random.choice(COLORS)
+            code, name, price, cost, ret_p, _w, n_colors = random.choices(
+                STYLES, weights=STYLE_WEIGHTS)[0]
+            color = random.choice(COLORS[:n_colors])
             sizes = random.sample(SIZES, 2) if bracketing else [random.choice(SIZES)]
             for size in sizes:
                 sku = f"{code}-{size}-{color[:3].upper()}"
@@ -91,23 +109,29 @@ def gen():
         # --- Muster 5: nicht abgeholte Sendung (ganze Bestellung), Rechnungskauf-lastig
         p_nonpickup = 0.055 if payment == "Rechnungskauf" else 0.008
         if random.random() < p_nonpickup:
-            return_no += 1
             rdate = order_date + timedelta(days=random.randrange(12, 22))
-            for pos in order_positions:
-                returns.append(_ret(return_no, rdate, pos, "", "Sonstiges", "nicht_abgeholt"))
+            if rdate <= CUTOFF:
+                return_no += 1
+                for pos in order_positions:
+                    returns.append(_ret(return_no, rdate, pos, "", "Sonstiges", "nicht_abgeholt"))
             continue
 
         # --- normale Retouren je Position
         for pos in order_positions:
             style = pos["product_name"]
-            base_p = next(rp for c, n, pr, co, rp in STYLES if n == style)
+            base_p = next(s[4] for s in STYLES if s[1] == style)
             p = base_p
             if customer == serial_customer:
                 p = 0.85
             if random.random() >= p:
                 continue
+            # Latenz breit gestreut: die meisten Retouren kommen schnell, ein Teil spaet
+            rdate = order_date + timedelta(days=random.choices(
+                [random.randrange(4, 20), random.randrange(20, 45), random.randrange(45, 75)],
+                weights=[55, 30, 15])[0])
+            if rdate > CUTOFF:
+                continue  # diese Retoure ist zum Datenstand noch nicht eingetroffen
             return_no += 1
-            rdate = order_date + timedelta(days=random.randrange(4, 45))
 
             # Muster 1: Hoodie Classic faellt klein aus
             if style == "Hoodie Classic" and random.random() < 0.62:
@@ -120,6 +144,9 @@ def gen():
                 reason = "Mangelhafte Qualitaet"
             else:
                 reason = pick(REASONS_BASE)
+            # Muster 6: bei einem Teil der Retouren wurde kein Grund erfasst
+            if random.random() < P_KEIN_GRUND:
+                reason = ""
             returns.append(_ret(return_no, rdate, pos, reason, _cat(reason), "kundenretoure"))
 
     # Chargen-Spike verstaerken: zusaetzliche Defekt-Retouren Socken im April
