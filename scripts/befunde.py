@@ -205,26 +205,35 @@ def sammle(d):
     # --- Kohorten-Scheintrend
     koh = next((f for f in d.get("blinde_flecken", []) if "sinken" in f["titel"]), None)
     if koh:
+        unreif = koh.get("unreife_kohorten", [])
         b.append({
-            "titel": "Die Retourenquote sinkt nicht, sie ist nur noch nicht fertig",
-            "unsichtbar": koh["warum_uebersehen"],
-            "was": koh["befund"],
-            "warum": "Retouren kommen Wochen nach der Bestellung. Wer sie dem Monat zuordnet, in dem "
-                     "sie eintreffen, misst junge Bestellungen mit, deren Rückgabefrist noch läuft. "
-                     "Der Report zeigt dann eine Verbesserung, die keine ist. Das ist gefährlich, weil "
-                     "genau daraus falsche Entschlüsse folgen: Eine Maßnahme wirkt scheinbar, ein "
-                     "Problem scheint sich zu erledigen, und beides stimmt nicht.",
+            "titel": "Die letzten Monate sehen besser aus, als sie sind",
+            "unsichtbar": "Die übliche Auswertung zählt Retouren in dem Monat, in dem sie im Lager "
+                          "ankommen. Dann steckt in jedem Monat eine Mischung aus alten und neuen "
+                          "Bestellungen, und die letzten Monate wirken automatisch gut.",
+            "was": "So ist hier gerechnet: Jede Retoure wird der Bestellung zugerechnet, aus der sie "
+                   "stammt. Eine Retoure aus einer Januar-Bestellung zählt zum Januar, auch wenn sie "
+                   "erst im März eintrifft. Das macht Monate vergleichbar, hat aber eine Folge: "
+                   + koh["befund"] + " Betroffen sind "
+                   + (", ".join(unreif) if unreif else "die jüngsten Monate")
+                   + ", dort läuft die Rückgabefrist noch.",
+            "warum": "Aus einer scheinbar fallenden Quote folgen falsche Entscheidungen. Eine Maßnahme "
+                     "sieht aus, als hätte sie gewirkt. Ein Problem scheint sich von selbst zu erledigen. "
+                     "Beides stimmt nicht, und man merkt es erst Monate später, wenn die Nachzügler da "
+                     "sind. Deshalb sind unfertige Monate hier gekennzeichnet und fließen in keinen "
+                     "Vergleich ein.",
             "hebel": None,
             "hebel_text": "kein Eurobetrag, aber die Grundlage jeder anderen Zahl hier",
             "schritte": [
-                "Retouren immer der Bestellung zuordnen, nicht dem Eingangsmonat.",
-                "Kohorten erst bewerten, wenn Rückgabefrist plus Bearbeitungspuffer abgelaufen sind.",
-                "Unfertige Monate im Reporting kennzeichnen statt sie mitzurechnen.",
-                "Vergleiche nur zwischen vollständigen Kohorten ziehen.",
+                "Im eigenen Reporting prüfen, ob Retouren nach Bestell- oder nach Eingangsmonat "
+                "gezählt werden. Bei Eingangsmonat ist jeder Monatsvergleich verzerrt.",
+                "Einen Monat erst bewerten, wenn Rückgabefrist plus Bearbeitungszeit abgelaufen sind.",
+                "Unfertige Monate im Report sichtbar kennzeichnen, statt sie kommentarlos mitzuzeigen.",
+                "Erfolge von Maßnahmen erst an vollständigen Monaten festmachen.",
             ],
             "aufwand": "S, eine Frage der Auswertungslogik",
             "wer": "Controlling",
-            "messung": "Kohorten-Quote nach Ablauf der Reifezeit gegen die zuvor gemeldete Zahl",
+            "messung": "Dieselbe Kohorte nach Ablauf der Reifezeit gegen die Zahl, die vorher gemeldet wurde",
             "gegen": "keine, das ist eine reine Korrektur der Rechenweise",
         })
 

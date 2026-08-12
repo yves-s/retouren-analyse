@@ -74,6 +74,11 @@ def to_float(value):
         return 0.0
 
 
+def de(x):
+    """Prozentwert in deutscher Schreibweise, etwa 0.176 -> "17,6 Prozent"."""
+    return f"{x * 100:.1f}".replace(".", ",") + " Prozent"
+
+
 def month_key(dt):
     return f"{dt.year:04d}-{dt.month:02d}"
 
@@ -89,8 +94,8 @@ def read_csv(path):
 
 def analyze(returns_rows, sales_rows, args):
     assumptions = [
-        f"Prozesskostensatz {args.prozesskosten:.2f} EUR je Retouren-Vorgang (EHI-Kernbereich 5 bis 20 EUR, kalibrierbar)",
-        f"Rueckgabefenster {args.rueckgabefenster} Tage, Reifepuffer {args.reifepuffer} Tage",
+        f"Prozesskostensatz {args.prozesskosten:.2f} EUR je Retouren-Vorgang (EHI-Kernbereich 5 bis 20 EUR, anpassbar)",
+        f"Rückgabefenster {args.rueckgabefenster} Tage, Reifepuffer {args.reifepuffer} Tage",
         f"Mindest-N je SKU: {args.min_retouren} Retouren",
     ]
     warnings = []
@@ -196,7 +201,7 @@ def analyze(returns_rows, sales_rows, args):
     if unmatched_orders:
         warnings.append(
             f"{unmatched_orders} Retouren-Positionen ohne Treffer in der Verkaufsbasis; "
-            "Quoten koennten untererfasst sein (Verkaufs-Export-Zeitraum pruefen)."
+            "Quoten könnten untererfasst sein, bitte den Zeitraum des Verkaufs-Exports prüfen."
         )
     today = max_date or datetime.now()
 
@@ -370,13 +375,13 @@ def analyze(returns_rows, sales_rows, args):
         delta = mature_avg - youngest["beta_quote"]
         if delta > 0.02:
             blind_spots.append({
-                "titel": "Die Retourenquote sieht aus, als wuerde sie sinken. Tut sie nicht.",
+                "titel": "Die Retourenquote sieht aus, als würde sie sinken. Tut sie nicht.",
                 "warum_uebersehen": "Wer Retouren eines Monats durch Verkaeufe desselben Monats teilt, misst junge "
                                     "Bestellungen mit, deren Rueckgabefrist noch laeuft. Der Report zeigt eine "
                                     "Verbesserung, die nur ein Zeitversatz ist.",
-                "befund": f"Reife Kohorten liegen im Schnitt bei {mature_avg:.1%}, die juengste Kohorte "
-                          f"{youngest['kohorte']} zeigt {youngest['beta_quote']:.1%}. Differenz "
-                          f"{delta:.1%} Punkte, allein durch fehlende Reife.",
+                "befund": f"Die abgeschlossenen Bestellmonate liegen im Schnitt bei {de(mature_avg)}, "
+                          f"der jüngste Monat {youngest['kohorte']} zeigt {de(youngest['beta_quote'])}. "
+                          f"Das sind {de(delta)}punkte Unterschied, allein weil dort noch Retouren fehlen.",
                 "unreife_kohorten": [c["kohorte"] for c in unripe],
             })
 
@@ -396,8 +401,8 @@ def analyze(returns_rows, sales_rows, args):
         blind_spots.append({
             "titel": "Artikel mit normaler Quote, die trotzdem viel Geld kosten",
             "warum_uebersehen": "Standard-Reports ranken nach Quote. Ein Artikel mit durchschnittlicher Quote, "
-                                "aber hohem Volumen oder Preis faellt dort nie auf, kostet aber mehr als die "
-                                "Ausreisser.",
+                                "aber hohem Volumen oder Preis fällt dort nie auf, kostet aber mehr als die "
+                                "Ausreißer.",
             "artikel": hidden_cost[:5],
         })
 
@@ -418,7 +423,7 @@ def analyze(returns_rows, sales_rows, args):
                 })
         if contrasts:
             blind_spots.append({
-                "titel": "Ein Merkmal, das erst in der Kreuzung auffaellt",
+                "titel": "Ein Merkmal, das erst in der Kreuzung auffällt",
                 "warum_uebersehen": "In der Gesamtsicht liegen alle Zahlarten dicht beieinander, da ist nichts zu "
                                     "sehen. Erst wenn man nur die nicht abgeholten Sendungen anschaut, kippt das "
                                     "Bild deutlich.",
@@ -431,9 +436,9 @@ def analyze(returns_rows, sales_rows, args):
     if total_ret and unknown / total_ret >= 0.08:
         blind_spots.append({
             "titel": "Ein relevanter Teil der Retouren hat keinen brauchbaren Grund",
-            "warum_uebersehen": "Leere und Sonstiges-Gruende landen im Report als Restposten und werden nicht "
-                                "weiter angeschaut. Dahinter steckt haeufig ein eigener Fall, etwa nicht "
-                                "abgeholte Sendungen oder ein Prozessfehler.",
+            "warum_uebersehen": "Leere Gründe und Sonstiges landen im Report als Restposten und werden nicht weiter "
+                                "angeschaut. Dahinter steckt häufig ein eigener Fall, etwa nicht abgeholte "
+                                "Sendungen oder ein Prozessfehler.",
             "anteil": round(unknown / total_ret, 4),
             "anzahl": unknown,
         })
@@ -445,7 +450,7 @@ def analyze(returns_rows, sales_rows, args):
                     and c["deckungsbeitrag_nach_retouren"] < 0.25 * c["deckungsbeitrag_vor_retouren"]]
     if margin_traps:
         blind_spots.append({
-            "titel": "Artikel, die brutto verdienen und nach Retouren fast nichts uebrig lassen",
+            "titel": "Artikel, die brutto verdienen und nach Retouren fast nichts übrig lassen",
             "warum_uebersehen": "Retourenkosten stehen in der Regel nicht am Artikel. In der Sortimentsauswertung "
                                 "sieht der Artikel gesund aus.",
             "artikel": [{"sku": c["sku"], "name": c["name"],
@@ -456,10 +461,10 @@ def analyze(returns_rows, sales_rows, args):
 
     missing = []
     sample = returns_rows[0] if returns_rows else {}
-    for col, analysis in [("delivered_date", "Wardrobing-Fenster und Latenz ab Zustellung"),
-                          ("batch", "Chargen-Zuordnung exakt (aktuell nur zeitliche Naeherung)"),
-                          ("refund_type", "Revenue-Recovery-Rate (Exchange vs. Refund)"),
-                          ("condition", "Wertverlust real statt Annahme")]:
+    for col, analysis in [("delivered_date", "Zeit zwischen Zustellung und Rücksendung"),
+                          ("batch", "Chargen eindeutig zuordnen statt zeitlich schätzen"),
+                          ("refund_type", "Umtausch gegen Erstattung unterscheiden"),
+                          ("condition", "Wertverlust echt rechnen statt schätzen")]:
         if col not in sample:
             missing.append({"spalte": col, "entfallene_analyse": analysis})
 

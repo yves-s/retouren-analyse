@@ -113,6 +113,22 @@ def kohorten_chart(kohorten):
     return "".join(out)
 
 
+GRUND_NAMEN = {
+    "zu_klein": "Zu klein",
+    "zu_gross": "Zu groß",
+    "passform_schnitt": "Passform oder Schnitt",
+    "farbe_optik_gefaellt_nicht": "Farbe oder Optik gefällt nicht",
+    "nicht_wie_beschrieben": "Nicht wie beschrieben",
+    "qualitaet_defekt": "Qualität oder Defekt",
+    "transportschaden": "Transportschaden",
+    "falscher_artikel": "Falscher Artikel geliefert",
+    "zu_spaet_geliefert": "Zu spät geliefert",
+    "reue_nicht_benoetigt": "Doch nicht benötigt",
+    "nicht_abgeholt_annahme_verweigert": "Nicht abgeholt oder verweigert",
+    "sonstiges_unbekannt": "Kein Grund erfasst",
+}
+
+
 def kachel(label, wert, zusatz="", akzent=False):
     kl = " akzent" if akzent else ""
     z = f'<div class="zusatz">{esc(zusatz)}</div>' if zusatz else ""
@@ -181,9 +197,10 @@ def build(d, titel):
     hebel_summe = sum(b["hebel"] for b in befunde if b["hebel"])
 
     # --- Charts
-    gruende = [{"grund": k.replace("_", " "), "n": v} for k, v in list(d["gruende"].items())[:8]]
+    gruende = [{"grund": GRUND_NAMEN.get(k, k.replace("_", " ")), "n": v}
+               for k, v in list(d["gruende"].items())[:8]]
     chart_gruende = bars(gruende, "n", "grund", lambda v: num(v),
-                         highlight=lambda r: "nicht abgeholt" in r["grund"] or "sonstiges" in r["grund"])
+                         highlight=lambda r: "Nicht abgeholt" in r["grund"] or "Kein Grund" in r["grund"])
 
     kosten_rows = [{"art": f'{c["name"]} · {c["sku"]}', "wert": c["gesamt"],
                     "neg": c.get("deckungsbeitrag_nach_retouren") is not None
@@ -198,9 +215,10 @@ def build(d, titel):
         if b.get("kontraste"):
             kontrast = b["kontraste"][0]
     if kontrast:
+        m = kontrast["merkmal"]
         zahlart = [
-            {"was": "Anteil am Gesamtgeschäft", "v": kontrast["anteil_im_gesamtgeschaeft"], "hot": False},
-            {"was": "Anteil bei nicht abgeholt", "v": kontrast["anteil_bei_nicht_abgeholt"], "hot": True},
+            {"was": f"{m}: Anteil an allen Bestellungen", "v": kontrast["anteil_im_gesamtgeschaeft"], "hot": False},
+            {"was": f"{m}: Anteil an den nicht abgeholten", "v": kontrast["anteil_bei_nicht_abgeholt"], "hot": True},
         ]
     chart_zahlart = bars(zahlart, "v", "was", lambda v: pct(v), highlight=lambda r: r["hot"]) if zahlart else ""
 
@@ -298,11 +316,14 @@ def build(d, titel):
   .chart .mitte {{ text-anchor: middle; }}
   .chart .mark {{ transition: opacity .12s; }}
   .chart .mark:hover {{ opacity: .72; }}
-  table {{ width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 8px; }}
-  th, td {{ text-align: left; padding: 9px 10px 9px 0; border-bottom: 1px solid var(--linie); }}
+  .tabelle-wrap {{ overflow-x: auto; margin-top: 8px; }}
+  table {{ width: 100%; border-collapse: collapse; font-size: 14px; min-width: 760px; }}
+  th, td {{ text-align: left; padding: 10px 18px 10px 0; border-bottom: 1px solid var(--linie);
+    vertical-align: top; }}
+  th:last-child, td:last-child {{ padding-right: 0; }}
   th {{ font-family: ui-monospace, monospace; font-size: 10.5px; letter-spacing: .1em;
     text-transform: uppercase; color: var(--gedaempft); font-weight: 400; }}
-  td.zahl, th.zahl {{ text-align: right; padding-right: 0; }}
+  td.zahl, th.zahl {{ text-align: right; white-space: nowrap; padding-left: 22px; }}
   td.neg {{ color: var(--signal); font-weight: 600; }}
   .fuss {{ margin-top: 56px; padding-top: 22px; border-top: 1px solid var(--linie);
     font-size: 13.5px; color: var(--gedaempft); }}
@@ -344,8 +365,8 @@ def build(d, titel):
   <p class="hint">Orange markiert: Gründe, hinter denen sich ein eigener Fall verbergen kann.</p>
   {chart_gruende}
 
-  {"<h2>Nicht abgeholte Sendungen</h2><p class='hint'>" +
-   esc(f'{num(np_["sendungen"])} Sendungen, {eur(np_["verlorener_umsatz"])} Umsatz plus {eur(np_["zusatzkosten_versand_annahme"])} Prozesskosten. Der Kontrast zeigt sich erst, wenn man nur diese Fälle betrachtet.') +
+  {"<h2>Nicht abgeholte Sendungen: welche Zahlart auffällt</h2><p class='hint'>" +
+   esc(f'{num(np_["sendungen"])} Sendungen kamen ungeöffnet zurück ({eur(np_["verlorener_umsatz"])} Umsatz plus {eur(np_["zusatzkosten_versand_annahme"])} Prozesskosten). Die beiden Balken zeigen dieselbe Zahlart zweimal: wie häufig sie im gesamten Geschäft vorkommt und wie häufig sie unter genau diesen Fällen vorkommt. Je weiter die Balken auseinanderliegen, desto stärker hängt das Nichtabholen mit der Zahlart zusammen.') +
    "</p>" + chart_zahlart if chart_zahlart else ""}
 
   {"<h2>Größenbedingte Retouren je Größe</h2><p class='hint'>" +
@@ -356,7 +377,7 @@ def build(d, titel):
   <p class="hint">Dieselben Zahlen als Tabelle, kopierbar und nachrechenbar. "Ertrag nach Retouren" ist
      der Rohertrag dieser Variante abzüglich aller Retourenkosten. Steht dort eine negative Zahl, kostet
      der Artikel im Zeitraum mehr, als er eingebracht hat.</p>
-  <table><thead><tr><th>Artikel</th><th>Variante</th><th class="zahl">Retouren</th>
+  <div class="tabelle-wrap"><table><thead><tr><th>Artikel</th><th>Variante</th><th class="zahl">Retouren</th>
     <th class="zahl">Umsatz</th><th class="zahl">Retourenkosten</th><th class="zahl">davon vom Umsatz</th>
     <th class="zahl">Ertrag nach Retouren</th></tr></thead><tbody>
     {"".join(f'<tr><td>{esc(c["name"])}</td><td><code>{esc(c["sku"])}</code></td>'
@@ -367,7 +388,7 @@ def build(d, titel):
              f'<td class="zahl{" neg" if (c.get("deckungsbeitrag_nach_retouren") or 0) < 0 else ""}">'
              f'{esc(eur(c["deckungsbeitrag_nach_retouren"]) if c.get("deckungsbeitrag_nach_retouren") is not None else "n/a")}</td></tr>'
              for c in kosten)}
-  </tbody></table>
+  </tbody></table></div>
 
   <h2>Begriffe</h2>
   <p class="hint">Damit die Zahlen oben eindeutig sind.</p>
