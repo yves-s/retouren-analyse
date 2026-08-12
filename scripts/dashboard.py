@@ -10,7 +10,11 @@ weil jeder Chart genau eine Serie hat.
 import argparse
 import html
 import json
+import os
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import befunde as befunde_mod  # noqa: E402
 
 PAPER = "#FAFAF7"
 INK = "#083A2A"
@@ -130,39 +134,58 @@ def build(d, titel):
         kachel("Retouren nach Menge", pct(q["gesamt_beta"]), "Beta-Quote"),
         kachel("Retouren nach Wert", pct(q["gesamt_gamma"]), "Gamma-Quote"),
         kachel("Bestellungen mit Retoure", pct(q["gesamt_bestellquote"]), f'{num(meta["bestellungen"])} Bestellungen'),
-        kachel("Kosten der Top-Artikel", eur(kosten_summe), "erstattet, Prozess, Wertverlust", akzent=True),
+        kachel("Retourenkosten der teuersten Artikel", eur(kosten_summe),
+               "Erstattungen, Bearbeitung, Wertverlust", akzent=True),
     ]
 
-    # --- Blinde Flecken
-    flecken = []
-    for b in d.get("blinde_flecken", []):
-        detail = b.get("befund", "")
-        if not detail and b.get("artikel"):
-            a = b["artikel"][0]
-            if "db_nach_retouren" in a:
-                detail = (f'{a["name"]} ({a["sku"]}): {eur(a["db_vor_retouren"])} vor Retouren, '
-                          f'{eur(a["db_nach_retouren"])} danach.')
-            else:
-                detail = f'{a["name"]} ({a["sku"]}): Quote {pct(a["beta_quote"])}, Kosten {eur(a["kosten"])}.'
-        if not detail and b.get("kontraste"):
-            k = b["kontraste"][0]
-            detail = (f'{k["merkmal"]}: {pct(k["anteil_bei_nicht_abgeholt"])} der nicht abgeholten Sendungen, '
-                      f'aber nur {pct(k["anteil_im_gesamtgeschaeft"])} des Gesamtgeschäfts.')
-        if not detail and b.get("anteil") is not None:
-            detail = f'{num(b["anzahl"])} Retouren, {pct(b["anteil"])} aller Fälle.'
-        flecken.append(
-            f'<article class="fleck"><h3>{esc(b["titel"])}</h3>'
-            f'<p class="befund">{esc(detail)}</p>'
-            f'<p class="warum"><span class="warum-lbl">Warum das im Standard-Report fehlt</span>'
-            f'{esc(b["warum_uebersehen"])}</p></article>'
+    # --- Befund-Karten: Zahl, Bedeutung, Maßnahme
+    befunde = befunde_mod.sammle(d)
+    karten = []
+    for i, b in enumerate(befunde, 1):
+        schritte = "".join(f"<li>{esc(s)}</li>" for s in b["schritte"])
+        unsichtbar = (
+            f'<p class="unsichtbar"><span class="mini-lbl">Warum das im Standard-Report fehlt</span>'
+            f'{esc(b["unsichtbar"])}</p>' if b.get("unsichtbar") else ""
         )
+        beleg = (f'<p class="beleg"><span class="mini-lbl">Belegt</span>{esc(b["beleg"])}</p>'
+                 if b.get("beleg") else "")
+        einschr = (f'<p class="beleg"><span class="mini-lbl">Einschränkung</span>{esc(b["einschraenkung"])}</p>'
+                   if b.get("einschraenkung") else "")
+        karten.append(f"""
+        <article class="befund-karte">
+          <div class="bk-kopf">
+            <span class="bk-nr">{i:02d}</span>
+            <h3>{esc(b["titel"])}</h3>
+            <span class="bk-hebel">{esc(b["hebel_text"])}</span>
+          </div>
+          <div class="bk-body">
+            <div class="bk-spalte">
+              <p class="mini-lbl">Was in den Daten steht</p>
+              <p>{esc(b["was"])}</p>
+              <p class="mini-lbl">Warum das zählt</p>
+              <p>{esc(b["warum"])}</p>
+              {unsichtbar}{beleg}{einschr}
+            </div>
+            <div class="bk-spalte">
+              <p class="mini-lbl">Was zu tun ist</p>
+              <ol>{schritte}</ol>
+              <dl class="bk-meta">
+                <dt>Aufwand</dt><dd>{esc(b["aufwand"])}</dd>
+                <dt>Wer</dt><dd>{esc(b["wer"])}</dd>
+                <dt>Woran du merkst, dass es wirkt</dt><dd>{esc(b["messung"])}</dd>
+                <dt class="gegen">Was dabei nicht kaputtgehen darf</dt><dd>{esc(b["gegen"])}</dd>
+              </dl>
+            </div>
+          </div>
+        </article>""")
+    hebel_summe = sum(b["hebel"] for b in befunde if b["hebel"])
 
     # --- Charts
     gruende = [{"grund": k.replace("_", " "), "n": v} for k, v in list(d["gruende"].items())[:8]]
     chart_gruende = bars(gruende, "n", "grund", lambda v: num(v),
                          highlight=lambda r: "nicht abgeholt" in r["grund"] or "sonstiges" in r["grund"])
 
-    kosten_rows = [{"art": f'{c["name"]} · {c["sku"].split("-")[-1]}', "wert": c["gesamt"],
+    kosten_rows = [{"art": f'{c["name"]} · {c["sku"]}', "wert": c["gesamt"],
                     "neg": c.get("deckungsbeitrag_nach_retouren") is not None
                            and c["deckungsbeitrag_nach_retouren"] < 0}
                    for c in kosten[:8]]
@@ -188,10 +211,29 @@ def build(d, titel):
         rows = [{"g": f'Größe {g}', "n": c.get("zu_klein", 0)} for g, c in sorted(l["je_groesse"].items())]
         chart_laeufer = bars(rows, "n", "g", lambda v: num(v))
 
-    # --- Annahmen
+    # --- Annahmen und fehlende Spalten, in Klartext
+    ERKLAERT = {
+        "delivered_date": ("Zustelldatum",
+                           "Damit ließe sich messen, wie viele Tage zwischen Zustellung und Rücksendung "
+                           "liegen. Sehr späte Rücksendungen kurz vor Fristende sind ein anderer Fall als "
+                           "sofortige, und getragene Ware kommt typischerweise spät zurück."),
+        "batch": ("Chargennummer",
+                  "Damit wäre ein Qualitäts-Ausschlag eindeutig einer Lieferung zuzuordnen. Ohne sie "
+                  "bleibt es bei der zeitlichen Vermutung: viele Defekte in einem Monat, vermutlich "
+                  "dieselbe Charge."),
+        "refund_type": ("Art der Erstattung",
+                        "Also ob der Kunde Geld zurückbekam, einen Gutschein nahm oder umtauschte. "
+                        "Damit ließe sich rechnen, wie viel Umsatz bei einer Retoure tatsächlich "
+                        "verloren geht und wie viel im Haus bleibt."),
+        "condition": ("Zustand der Rückware",
+                      "Also ob der Artikel wieder als neu verkauft werden kann, als B-Ware rausgeht "
+                      "oder entsorgt wird. Damit wäre der Wertverlust echt gerechnet statt geschätzt."),
+    }
     annahmen = "".join(f"<li>{esc(a)}</li>" for a in meta["annahmen"])
-    fehlend = "".join(f'<li><code>{esc(m["spalte"])}</code> würde ermöglichen: {esc(m["entfallene_analyse"])}</li>'
-                      for m in meta["fehlende_spalten"])
+    fehlend = ""
+    for m in meta["fehlende_spalten"]:
+        name, erkl = ERKLAERT.get(m["spalte"], (m["spalte"], m["entfallene_analyse"]))
+        fehlend += (f'<li><strong>{esc(name)}</strong> <code>{esc(m["spalte"])}</code><br>{esc(erkl)}</li>')
 
     return f"""<!doctype html>
 <html lang="de"><head><meta charset="utf-8">
@@ -201,11 +243,12 @@ def build(d, titel):
   :root {{
     --paper: {PAPER}; --ink: {INK}; --serie: {EMERALD}; --moss: {MOSS}; --signal: {SIGNAL};
     --bg: var(--paper); --text: var(--ink); --panel: #fff; --linie: rgba(8,58,42,.12);
-    --gedaempft: rgba(8,58,42,.62);
+    --gedaempft: rgba(8,58,42,.62); --moss-flaeche: {MOSS};
   }}
   @media (prefers-color-scheme: dark) {{
     :root {{ --bg: {INK}; --text: {PAPER}; --serie: {EMERALD_HELL};
-      --panel: rgba(212,237,224,.06); --linie: rgba(212,237,224,.16); --gedaempft: rgba(250,250,247,.66); }}
+      --panel: rgba(212,237,224,.06); --linie: rgba(212,237,224,.16); --gedaempft: rgba(250,250,247,.66);
+      --moss-flaeche: rgba(212,237,224,.14); }}
   }}
   * {{ box-sizing: border-box; }}
   body {{ margin: 0; background: var(--bg); color: var(--text);
@@ -226,14 +269,28 @@ def build(d, titel):
     text-transform: uppercase; color: var(--gedaempft); }}
   .kwert {{ font-size: 32px; font-weight: 600; letter-spacing: -.02em; margin-top: 6px; }}
   .zusatz {{ font-size: 13px; color: var(--gedaempft); margin-top: 2px; }}
-  .flecken {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; }}
-  .fleck {{ background: var(--panel); border: 1px solid var(--linie); border-left: 3px solid var(--signal);
-    padding: 18px 20px; }}
-  .fleck h3 {{ font-size: 15.5px; margin: 0 0 8px; font-weight: 600; }}
-  .befund {{ margin: 0 0 10px; }}
-  .warum {{ margin: 0; font-size: 13.5px; color: var(--gedaempft); }}
-  .warum-lbl {{ display: block; font-family: ui-monospace, monospace; font-size: 10px;
-    letter-spacing: .12em; text-transform: uppercase; margin-bottom: 3px; }}
+  .befund-karte {{ background: var(--panel); border: 1px solid var(--linie); margin-bottom: 14px; }}
+  .bk-kopf {{ display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
+    padding: 16px 22px; border-bottom: 1px solid var(--linie); }}
+  .bk-nr {{ font-family: ui-monospace, monospace; font-size: 12px; color: var(--signal); }}
+  .bk-kopf h3 {{ font-size: 17px; margin: 0; font-weight: 600; flex: 1 1 260px; letter-spacing: -.005em; }}
+  .bk-hebel {{ font-family: ui-monospace, monospace; font-size: 12px; color: var(--text);
+    background: var(--moss-flaeche); padding: 5px 10px; white-space: nowrap; }}
+  .bk-body {{ display: grid; grid-template-columns: 1fr 1fr; gap: 26px; padding: 20px 22px 22px; }}
+  @media (max-width: 720px) {{ .bk-body {{ grid-template-columns: 1fr; gap: 14px; }} }}
+  .bk-spalte p {{ margin: 0 0 12px; }}
+  .bk-spalte ol {{ margin: 0 0 14px; padding-left: 20px; }}
+  .bk-spalte li {{ margin-bottom: 6px; }}
+  .mini-lbl {{ display: block; font-family: ui-monospace, monospace; font-size: 10px;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--gedaempft);
+    margin: 0 0 4px !important; }}
+  .unsichtbar, .beleg {{ font-size: 13.5px; color: var(--gedaempft); border-left: 2px solid var(--linie);
+    padding-left: 12px; }}
+  .bk-meta {{ margin: 0; font-size: 13.5px; }}
+  .bk-meta dt {{ font-family: ui-monospace, monospace; font-size: 10px; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--gedaempft); margin-top: 10px; }}
+  .bk-meta dt.gegen {{ color: var(--signal); }}
+  .bk-meta dd {{ margin: 2px 0 0; }}
   .chart {{ width: 100%; height: auto; overflow: visible; margin-top: 6px; }}
   .chart .lbl {{ font-size: 13px; fill: var(--text); }}
   .chart .val {{ font-size: 12.5px; fill: var(--gedaempft); }}
@@ -251,6 +308,11 @@ def build(d, titel):
     font-size: 13.5px; color: var(--gedaempft); }}
   .fuss ul {{ margin: 6px 0 18px; padding-left: 18px; }}
   .leer {{ color: var(--gedaempft); font-size: 14px; }}
+  .glossar {{ margin: 8px 0 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 4px 28px; font-size: 14px; }}
+  .glossar dt {{ font-weight: 600; margin-top: 12px; }}
+  .glossar dd {{ margin: 2px 0 0; color: var(--gedaempft); }}
+  .fuss ul.fehlend li {{ margin-bottom: 9px; }}
   code {{ font-family: ui-monospace, monospace; font-size: .92em; }}
 </style></head>
 <body>
@@ -262,18 +324,20 @@ def build(d, titel):
 
   <div class="kacheln">{"".join(kacheln)}</div>
 
-  <h2>Was sonst untergegangen wäre</h2>
-  <p class="hint">Befunde, die ein normaler Retouren-Report strukturell nicht zeigt.</p>
-  <div class="flecken">{"".join(flecken)}</div>
+  <h2>Befunde und was zu tun ist</h2>
+  <p class="hint">Nach Geldwert sortiert. Jeder Befund sagt, was in den Daten steht, warum das zählt und
+     welche Schritte folgen. Zahlen stammen aus dem Export, die Einordnung aus der Fachliteratur.</p>
+  {"".join(karten)}
 
   <h2>Retourenquote je Bestellmonat</h2>
   <p class="hint">Zugeordnet nach Bestellung, nicht nach Retourendatum. Schraffierte Monate sind noch
      nicht vollständig, ihre Quote sieht besser aus als sie ist.</p>
   {kohorten_chart(q["je_kohorte"])}
 
-  <h2>Was die Retouren kostet</h2>
-  <p class="hint">Erstattung plus Prozesskosten plus Wertverlust je Artikelvariante.
-     Orange markiert: verdient nach Retouren nichts mehr.</p>
+  <h2>Was die Retouren kosten, je Artikelvariante</h2>
+  <p class="hint">Gerechnet als erstatteter Betrag plus Bearbeitungskosten plus Wertverlust bei defekter
+     Ware. Orange markiert heißt: Von dem, was diese Variante im Verkauf verdient hat, bleibt nach Abzug
+     dieser Kosten nichts übrig. Der Artikel kostet unterm Strich Geld.</p>
   {chart_kosten}
 
   <h2>Retourengründe</h2>
@@ -289,20 +353,49 @@ def build(d, titel):
    "</p>" + chart_laeufer if chart_laeufer else ""}
 
   <h2>Artikel im Detail</h2>
-  <p class="hint">Dieselben Zahlen als Tabelle, damit sie kopierbar und prüfbar sind.</p>
+  <p class="hint">Dieselben Zahlen als Tabelle, kopierbar und nachrechenbar. "Ertrag nach Retouren" ist
+     der Rohertrag dieser Variante abzüglich aller Retourenkosten. Steht dort eine negative Zahl, kostet
+     der Artikel im Zeitraum mehr, als er eingebracht hat.</p>
   <table><thead><tr><th>Artikel</th><th>Variante</th><th class="zahl">Retouren</th>
-    <th class="zahl">Kosten</th><th class="zahl">DB nach Retouren</th></tr></thead><tbody>
+    <th class="zahl">Umsatz</th><th class="zahl">Retourenkosten</th><th class="zahl">davon vom Umsatz</th>
+    <th class="zahl">Ertrag nach Retouren</th></tr></thead><tbody>
     {"".join(f'<tr><td>{esc(c["name"])}</td><td><code>{esc(c["sku"])}</code></td>'
              f'<td class="zahl">{num(c["retouren_vorgaenge"])}</td>'
+             f'<td class="zahl">{esc(eur(c.get("umsatz")))}</td>'
              f'<td class="zahl">{esc(eur(c["gesamt"]))}</td>'
+             f'<td class="zahl">{esc(pct(c.get("kosten_anteil_am_umsatz")))}</td>'
              f'<td class="zahl{" neg" if (c.get("deckungsbeitrag_nach_retouren") or 0) < 0 else ""}">'
              f'{esc(eur(c["deckungsbeitrag_nach_retouren"]) if c.get("deckungsbeitrag_nach_retouren") is not None else "n/a")}</td></tr>'
              for c in kosten)}
   </tbody></table>
 
+  <h2>Begriffe</h2>
+  <p class="hint">Damit die Zahlen oben eindeutig sind.</p>
+  <dl class="glossar">
+    <dt>Retouren nach Menge</dt>
+    <dd>Zurückgeschickte Artikel geteilt durch verschickte Artikel. Die gängigste Sicht, gut für die
+        Frage "wie viel Ware kommt zurück".</dd>
+    <dt>Retouren nach Wert</dt>
+    <dd>Erstatteter Betrag geteilt durch verschickten Warenwert. Liegt diese Zahl über der Mengensicht,
+        kommen überdurchschnittlich teure Artikel zurück.</dd>
+    <dt>Bestellungen mit Retoure</dt>
+    <dd>Anteil der Bestellungen, aus denen mindestens ein Artikel zurückkam. Die Sicht auf den Prozess:
+        wie oft läuft eine Bestellung nicht glatt durch.</dd>
+    <dt>Bestellmonat statt Retourenmonat</dt>
+    <dd>Jede Retoure wird der Bestellung zugerechnet, aus der sie stammt, nicht dem Monat, in dem sie
+        eintrifft. Nur so vergleicht man Gleiches mit Gleichem. Der Preis dafür: Die jüngsten Monate
+        sind noch unvollständig und werden hier gekennzeichnet.</dd>
+    <dt>Ertrag nach Retouren</dt>
+    <dd>Was von einer Artikelvariante übrig bleibt, wenn man vom Rohertrag alle Retourenkosten abzieht.
+        Negativ heißt: Der Artikel hat im Zeitraum Geld gekostet.</dd>
+    <dt>Retourenkosten</dt>
+    <dd>Erstatteter Betrag plus Bearbeitungskosten je Vorgang plus Wertverlust bei defekter Ware.
+        Der Bearbeitungssatz ist eine Annahme und unten aufgeführt.</dd>
+  </dl>
+
   <div class="fuss">
     <strong>Annahmen</strong><ul>{annahmen}</ul>
-    <strong>Was mit weiteren Spalten möglich wäre</strong><ul>{fehlend}</ul>
+    <strong>Was mit weiteren Spalten im Export möglich wäre</strong><ul class="fehlend">{fehlend}</ul>
     <p>Jede Zahl stammt aus <code>analysis.json</code>. Nichts davon ist geschätzt.</p>
   </div>
 </div>

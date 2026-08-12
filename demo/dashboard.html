@@ -6,11 +6,12 @@
   :root {
     --paper: #FAFAF7; --ink: #083A2A; --serie: #0B6E4F; --moss: #D4EDE0; --signal: #F2653C;
     --bg: var(--paper); --text: var(--ink); --panel: #fff; --linie: rgba(8,58,42,.12);
-    --gedaempft: rgba(8,58,42,.62);
+    --gedaempft: rgba(8,58,42,.62); --moss-flaeche: #D4EDE0;
   }
   @media (prefers-color-scheme: dark) {
     :root { --bg: #083A2A; --text: #FAFAF7; --serie: #10A26B;
-      --panel: rgba(212,237,224,.06); --linie: rgba(212,237,224,.16); --gedaempft: rgba(250,250,247,.66); }
+      --panel: rgba(212,237,224,.06); --linie: rgba(212,237,224,.16); --gedaempft: rgba(250,250,247,.66);
+      --moss-flaeche: rgba(212,237,224,.14); }
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--text);
@@ -31,14 +32,28 @@
     text-transform: uppercase; color: var(--gedaempft); }
   .kwert { font-size: 32px; font-weight: 600; letter-spacing: -.02em; margin-top: 6px; }
   .zusatz { font-size: 13px; color: var(--gedaempft); margin-top: 2px; }
-  .flecken { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; }
-  .fleck { background: var(--panel); border: 1px solid var(--linie); border-left: 3px solid var(--signal);
-    padding: 18px 20px; }
-  .fleck h3 { font-size: 15.5px; margin: 0 0 8px; font-weight: 600; }
-  .befund { margin: 0 0 10px; }
-  .warum { margin: 0; font-size: 13.5px; color: var(--gedaempft); }
-  .warum-lbl { display: block; font-family: ui-monospace, monospace; font-size: 10px;
-    letter-spacing: .12em; text-transform: uppercase; margin-bottom: 3px; }
+  .befund-karte { background: var(--panel); border: 1px solid var(--linie); margin-bottom: 14px; }
+  .bk-kopf { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
+    padding: 16px 22px; border-bottom: 1px solid var(--linie); }
+  .bk-nr { font-family: ui-monospace, monospace; font-size: 12px; color: var(--signal); }
+  .bk-kopf h3 { font-size: 17px; margin: 0; font-weight: 600; flex: 1 1 260px; letter-spacing: -.005em; }
+  .bk-hebel { font-family: ui-monospace, monospace; font-size: 12px; color: var(--text);
+    background: var(--moss-flaeche); padding: 5px 10px; white-space: nowrap; }
+  .bk-body { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; padding: 20px 22px 22px; }
+  @media (max-width: 720px) { .bk-body { grid-template-columns: 1fr; gap: 14px; } }
+  .bk-spalte p { margin: 0 0 12px; }
+  .bk-spalte ol { margin: 0 0 14px; padding-left: 20px; }
+  .bk-spalte li { margin-bottom: 6px; }
+  .mini-lbl { display: block; font-family: ui-monospace, monospace; font-size: 10px;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--gedaempft);
+    margin: 0 0 4px !important; }
+  .unsichtbar, .beleg { font-size: 13.5px; color: var(--gedaempft); border-left: 2px solid var(--linie);
+    padding-left: 12px; }
+  .bk-meta { margin: 0; font-size: 13.5px; }
+  .bk-meta dt { font-family: ui-monospace, monospace; font-size: 10px; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--gedaempft); margin-top: 10px; }
+  .bk-meta dt.gegen { color: var(--signal); }
+  .bk-meta dd { margin: 2px 0 0; }
   .chart { width: 100%; height: auto; overflow: visible; margin-top: 6px; }
   .chart .lbl { font-size: 13px; fill: var(--text); }
   .chart .val { font-size: 12.5px; fill: var(--gedaempft); }
@@ -56,6 +71,11 @@
     font-size: 13.5px; color: var(--gedaempft); }
   .fuss ul { margin: 6px 0 18px; padding-left: 18px; }
   .leer { color: var(--gedaempft); font-size: 14px; }
+  .glossar { margin: 8px 0 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 4px 28px; font-size: 14px; }
+  .glossar dt { font-weight: 600; margin-top: 12px; }
+  .glossar dd { margin: 2px 0 0; color: var(--gedaempft); }
+  .fuss ul.fehlend li { margin-bottom: 9px; }
   code { font-family: ui-monospace, monospace; font-size: .92em; }
 </style></head>
 <body>
@@ -65,21 +85,179 @@
   <p class="meta">1.308 Retouren-Positionen aus 5.200 Bestellungen ·
      Datenstand 2026-07-05</p>
 
-  <div class="kacheln"><div class="kachel"><div class="klabel">Retouren nach Menge</div><div class="kwert">15,9 %</div><div class="zusatz">Beta-Quote</div></div><div class="kachel"><div class="klabel">Retouren nach Wert</div><div class="kwert">17,7 %</div><div class="zusatz">Gamma-Quote</div></div><div class="kachel"><div class="klabel">Bestellungen mit Retoure</div><div class="kwert">22,4 %</div><div class="zusatz">5.200 Bestellungen</div></div><div class="kachel akzent"><div class="klabel">Kosten der Top-Artikel</div><div class="kwert">30.552 EUR</div><div class="zusatz">erstattet, Prozess, Wertverlust</div></div></div>
+  <div class="kacheln"><div class="kachel"><div class="klabel">Retouren nach Menge</div><div class="kwert">15,9 %</div><div class="zusatz">Beta-Quote</div></div><div class="kachel"><div class="klabel">Retouren nach Wert</div><div class="kwert">17,7 %</div><div class="zusatz">Gamma-Quote</div></div><div class="kachel"><div class="klabel">Bestellungen mit Retoure</div><div class="kwert">22,4 %</div><div class="zusatz">5.200 Bestellungen</div></div><div class="kachel akzent"><div class="klabel">Retourenkosten der teuersten Artikel</div><div class="kwert">30.552 EUR</div><div class="zusatz">Erstattungen, Bearbeitung, Wertverlust</div></div></div>
 
-  <h2>Was sonst untergegangen wäre</h2>
-  <p class="hint">Befunde, die ein normaler Retouren-Report strukturell nicht zeigt.</p>
-  <div class="flecken"><article class="fleck"><h3>Die Retourenquote sieht aus, als wuerde sie sinken. Tut sie nicht.</h3><p class="befund">Reife Kohorten liegen im Schnitt bei 17.6%, die juengste Kohorte 2026-06 zeigt 9.0%. Differenz 8.6% Punkte, allein durch fehlende Reife.</p><p class="warum"><span class="warum-lbl">Warum das im Standard-Report fehlt</span>Wer Retouren eines Monats durch Verkaeufe desselben Monats teilt, misst junge Bestellungen mit, deren Rueckgabefrist noch laeuft. Der Report zeigt eine Verbesserung, die nur ein Zeitversatz ist.</p></article><article class="fleck"><h3>Artikel mit normaler Quote, die trotzdem viel Geld kosten</h3><p class="befund">Zip-Hoodie Heavy (HOOD-ZP-XS-SCH): Quote 16,9 %, Kosten 3.824 EUR.</p><p class="warum"><span class="warum-lbl">Warum das im Standard-Report fehlt</span>Standard-Reports ranken nach Quote. Ein Artikel mit durchschnittlicher Quote, aber hohem Volumen oder Preis faellt dort nie auf, kostet aber mehr als die Ausreisser.</p></article><article class="fleck"><h3>Ein Merkmal, das erst in der Kreuzung auffaellt</h3><p class="befund">Rechnungskauf: 70,2 % der nicht abgeholten Sendungen, aber nur 29,0 % des Gesamtgeschäfts.</p><p class="warum"><span class="warum-lbl">Warum das im Standard-Report fehlt</span>In der Gesamtsicht liegen alle Zahlarten dicht beieinander, da ist nichts zu sehen. Erst wenn man nur die nicht abgeholten Sendungen anschaut, kippt das Bild deutlich.</p></article><article class="fleck"><h3>Ein relevanter Teil der Retouren hat keinen brauchbaren Grund</h3><p class="befund">150 Retouren, 11,5 % aller Fälle.</p><p class="warum"><span class="warum-lbl">Warum das im Standard-Report fehlt</span>Leere und Sonstiges-Gruende landen im Report als Restposten und werden nicht weiter angeschaut. Dahinter steckt haeufig ein eigener Fall, etwa nicht abgeholte Sendungen oder ein Prozessfehler.</p></article><article class="fleck"><h3>Artikel, die brutto verdienen und nach Retouren fast nichts uebrig lassen</h3><p class="befund">Regenjacke Tech (JKT-RN-L-WEI): 2.944 EUR vor Retouren, -907 EUR danach.</p><p class="warum"><span class="warum-lbl">Warum das im Standard-Report fehlt</span>Retourenkosten stehen in der Regel nicht am Artikel. In der Sortimentsauswertung sieht der Artikel gesund aus.</p></article></div>
+  <h2>Befunde und was zu tun ist</h2>
+  <p class="hint">Nach Geldwert sortiert. Jeder Befund sagt, was in den Daten steht, warum das zählt und
+     welche Schritte folgen. Zahlen stammen aus dem Export, die Einordnung aus der Fachliteratur.</p>
+  
+        <article class="befund-karte">
+          <div class="bk-kopf">
+            <span class="bk-nr">01</span>
+            <h3>Regenjacke Tech verdient nach Retouren nichts mehr</h3>
+            <span class="bk-hebel">15.870 EUR Retourenkosten im Zeitraum</span>
+          </div>
+          <div class="bk-body">
+            <div class="bk-spalte">
+              <p class="mini-lbl">Was in den Daten steht</p>
+              <p>5 Varianten stehen nach Abzug der Retourenkosten bei oder unter null, 4 davon im Minus. Schlechteste Variante JKT-RN-L-WEI: 2.944 EUR Rohertrag, danach -907 EUR.</p>
+              <p class="mini-lbl">Warum das zählt</p>
+              <p>Jeder verkaufte Artikel dieser Sorte kostet unterm Strich Geld. Mehr Absatz verschlimmert das Problem, statt es zu lösen. Ursache ist fast immer die Kombination aus dünner Marge und normaler Retourenquote: Bei 30 Prozent Rohmarge reicht eine durchschnittliche Quote, um den Artikel ins Minus zu drehen.</p>
+              <p class="unsichtbar"><span class="mini-lbl">Warum das im Standard-Report fehlt</span>Retourenkosten stehen in keiner Sortimentsauswertung am Artikel. Dort erscheint er mit normaler Marge und normalem Umsatz.</p>
+            </div>
+            <div class="bk-spalte">
+              <p class="mini-lbl">Was zu tun ist</p>
+              <ol><li>Retourengründe dieses Artikels einzeln durchgehen, bevor am Preis gedreht wird.</li><li>Kalkulation prüfen: Trägt die Marge überhaupt eine normale Retourenquote?</li><li>Wenn die Ursache abstellbar ist (Größe, Fotos, Qualität), zuerst dort ansetzen.</li><li>Wenn nicht: Preis, Einkauf oder Auslistung. Das ist eine Sortimentsentscheidung.</li></ol>
+              <dl class="bk-meta">
+                <dt>Aufwand</dt><dd>M für die Analyse, die Entscheidung liegt darüber</dd>
+                <dt>Wer</dt><dd>Einkauf, Entscheidung Geschäftsführung</dd>
+                <dt>Woran du merkst, dass es wirkt</dt><dd>Deckungsbeitrag nach Retouren je Variante, nächste vollständige Bestellkohorte</dd>
+                <dt class="gegen">Was dabei nicht kaputtgehen darf</dt><dd>Sortimentsbreite und Warenkorbgröße, falls der Artikel Kombikäufe zieht</dd>
+              </dl>
+            </div>
+          </div>
+        </article>
+        <article class="befund-karte">
+          <div class="bk-kopf">
+            <span class="bk-nr">02</span>
+            <h3>Sendungen, die nie abgeholt wurden</h3>
+            <span class="bk-hebel">9.825 EUR Umsatz plus 940 EUR Prozesskosten</span>
+          </div>
+          <div class="bk-body">
+            <div class="bk-spalte">
+              <p class="mini-lbl">Was in den Daten steht</p>
+              <p>94 Sendungen kamen ungeöffnet zurück, 1,8 % aller Bestellungen und 8,1 % aller Retourenvorgänge. Auffällig: Rechnungskauf macht 29,0 % des Geschäfts aus, aber 70,2 % dieser Fälle.</p>
+              <p class="mini-lbl">Warum das zählt</p>
+              <p>Das ist die teuerste Art von Retoure: Versand hin, Versand zurück, volle Erstattung, kein Gegenwert und keine Chance auf einen Umtausch. Die Ware war wochenlang gebunden. Und anders als bei einer normalen Retoure gibt es keine Kaufentscheidung, die man hätte besser vorbereiten können, sondern nur einen Zustellprozess, der nicht zu Ende gegangen ist.</p>
+              <p class="unsichtbar"><span class="mini-lbl">Warum das im Standard-Report fehlt</span>Beim Versanddienstleister läuft der Fall als zugestellt und danach retourniert. In der Versandstatistik ist alles grün. Sichtbar wird es nur im eigenen Retourendatensatz.</p><p class="beleg"><span class="mini-lbl">Belegt</span>In Deutschland scheitern rund 7 Prozent der Zustellungen im ersten Versuch. Nach einer Befragung ändern 20 Prozent der Empfänger nach der ersten Tracking-Nachricht Zeit oder Ort der Zustellung.</p>
+            </div>
+            <div class="bk-spalte">
+              <p class="mini-lbl">Was zu tun ist</p>
+              <ol><li>Abhol-Erinnerung auslösen, sobald der Status &quot;im Paketshop hinterlegt&quot; kommt. Die Frist beträgt bei DHL sieben Tage, dann geht das Paket automatisch zurück.</li><li>Adressprüfung im Checkout aktivieren (Validierung, Vorschläge, Tippfehler-Erkennung).</li><li>Zustelloptionen anbieten: Wunschort, Paketshop-Wahl, Wunschtag.</li><li>Bei auffälliger Zahlart im Einzelfall das Risiko steuern, die Zahlart aber nicht abschalten. Sie zieht das Verhalten an, sie erzeugt es nicht.</li></ol>
+              <dl class="bk-meta">
+                <dt>Aufwand</dt><dd>M für Erinnerung und Zustelloptionen, S bis M für die Adressprüfung</dd>
+                <dt>Wer</dt><dd>Logistik, für die Adressprüfung der Shop</dd>
+                <dt>Woran du merkst, dass es wirkt</dt><dd>Anzahl nicht abgeholter Sendungen pro Monat und ihr Anteil an allen Sendungen</dd>
+                <dt class="gegen">Was dabei nicht kaputtgehen darf</dt><dd>Conversion im Checkout und der Umsatzanteil der betroffenen Zahlart</dd>
+              </dl>
+            </div>
+          </div>
+        </article>
+        <article class="befund-karte">
+          <div class="bk-kopf">
+            <span class="bk-nr">03</span>
+            <h3>Hoodie Classic faellt klein aus</h3>
+            <span class="bk-hebel">120 größenbedingte Retouren</span>
+          </div>
+          <div class="bk-body">
+            <div class="bk-spalte">
+              <p class="mini-lbl">Was in den Daten steht</p>
+              <p>114 Retouren mit Grund &quot;zu klein&quot; gegen 6 mit &quot;zu groß&quot;, durchgehend über alle Größen. Das ist kein Streuungsmuster, sondern ein Schnittfehler des Artikels.</p>
+              <p class="mini-lbl">Warum das zählt</p>
+              <p>Wenn ein Artikel systematisch kleiner ausfällt als erwartet, bestellt ein Teil der Kundschaft von vornherein zwei Größen und der Rest schickt zurück. Beides kostet, und beides ist mit einer Zeile auf der Produktseite behebbar. Es ist die am besten belegte Stellschraube im Retourenmanagement.</p>
+              <p class="beleg"><span class="mini-lbl">Belegt</span>Gemessen bei Zalando (KDD 2021, A/B-Test mit über 180.000 Personen je Gruppe): minus 4,3 bis 6,6 Prozent größenbedingte Retouren. Fremdkontext, keine Prognose.</p>
+            </div>
+            <div class="bk-spalte">
+              <p class="mini-lbl">Was zu tun ist</p>
+              <ol><li>Hinweis &quot;fällt klein aus, wir empfehlen eine Größe größer&quot; direkt an die Größenauswahl, nicht in die Größentabelle.</li><li>Artikel nachmessen und die echten Maße in die Größentabelle eintragen, nicht die Herstellerangabe.</li><li>Bei durchgehender Abweichung die Gradierung mit dem Lieferanten klären.</li><li>Größenberater-Software zuletzt. Sie ist nach der Datenlage vor allem ein Conversion-Werkzeug, kein Retouren-Werkzeug.</li></ol>
+              <dl class="bk-meta">
+                <dt>Aufwand</dt><dd>S für Schritt 1 und 2, L für den Lieferanten</dd>
+                <dt>Wer</dt><dd>Shop und Content, für die Gradierung der Einkauf</dd>
+                <dt>Woran du merkst, dass es wirkt</dt><dd>Anteil &quot;zu klein&quot; an den Retouren dieses Artikels, frühestens vier bis sechs Wochen nach der Änderung</dd>
+                <dt class="gegen">Was dabei nicht kaputtgehen darf</dt><dd>Zahl der Mehrgrößen-Bestellungen. In Zalandos A/B-Test stiegen sie durch solche Hinweise um 11 Prozent. Steigt das stärker als die Quote fällt, ist die Maßnahme unterm Strich negativ.</dd>
+              </dl>
+            </div>
+          </div>
+        </article>
+        <article class="befund-karte">
+          <div class="bk-kopf">
+            <span class="bk-nr">04</span>
+            <h3>Qualitäts-Ausschlag bei Sneaker Socken 3er-Pack</h3>
+            <span class="bk-hebel">33 Retouren in einem Monat, davon der Großteil vermeidbar, wenn der Verdacht stimmt</span>
+          </div>
+          <div class="bk-body">
+            <div class="bk-spalte">
+              <p class="mini-lbl">Was in den Daten steht</p>
+              <p>33 Defekt-Retouren im Monat 2026-04, sonst rund 1 pro Monat.</p>
+              <p class="mini-lbl">Warum das zählt</p>
+              <p>Eine solche Häufung in einem einzelnen Monat ist selten Zufall. Meistens steckt eine Charge dahinter. Liegt der Rest davon noch im Lager, produziert er weiter Retouren, schlechte Bewertungen und Servicefälle, bis er verkauft ist.</p>
+              <p class="beleg"><span class="mini-lbl">Einschränkung</span>Ohne Chargennummer im Export ist die Zuordnung eine zeitliche Näherung, kein Beweis.</p>
+            </div>
+            <div class="bk-spalte">
+              <p class="mini-lbl">Was zu tun ist</p>
+              <ol><li>Restbestand prüfen und bei Bestätigung sperren, bevor weiter verkauft wird.</li><li>Wareneingang des Zeitraums der Charge zuordnen.</li><li>Beim Lieferanten reklamieren, mit den Retourengründen als Beleg.</li><li>Bei Sicherheits- oder Qualitätsthemen betroffene Kunden proaktiv anschreiben.</li></ol>
+              <dl class="bk-meta">
+                <dt>Aufwand</dt><dd>S bis M, hängt an der Rückverfolgbarkeit</dd>
+                <dt>Wer</dt><dd>Einkauf und Logistik</dd>
+                <dt>Woran du merkst, dass es wirkt</dt><dd>Defekt-Retouren dieses Artikels pro Monat, zurück auf das Niveau davor</dd>
+                <dt class="gegen">Was dabei nicht kaputtgehen darf</dt><dd>Lieferfähigkeit. Eine gesperrte Charge ohne Nachschub ist ein Umsatzloch.</dd>
+              </dl>
+            </div>
+          </div>
+        </article>
+        <article class="befund-karte">
+          <div class="bk-kopf">
+            <span class="bk-nr">05</span>
+            <h3>Die Retourenquote sinkt nicht, sie ist nur noch nicht fertig</h3>
+            <span class="bk-hebel">kein Eurobetrag, aber die Grundlage jeder anderen Zahl hier</span>
+          </div>
+          <div class="bk-body">
+            <div class="bk-spalte">
+              <p class="mini-lbl">Was in den Daten steht</p>
+              <p>Reife Kohorten liegen im Schnitt bei 17.6%, die juengste Kohorte 2026-06 zeigt 9.0%. Differenz 8.6% Punkte, allein durch fehlende Reife.</p>
+              <p class="mini-lbl">Warum das zählt</p>
+              <p>Retouren kommen Wochen nach der Bestellung. Wer sie dem Monat zuordnet, in dem sie eintreffen, misst junge Bestellungen mit, deren Rückgabefrist noch läuft. Der Report zeigt dann eine Verbesserung, die keine ist. Das ist gefährlich, weil genau daraus falsche Entschlüsse folgen: Eine Maßnahme wirkt scheinbar, ein Problem scheint sich zu erledigen, und beides stimmt nicht.</p>
+              <p class="unsichtbar"><span class="mini-lbl">Warum das im Standard-Report fehlt</span>Wer Retouren eines Monats durch Verkaeufe desselben Monats teilt, misst junge Bestellungen mit, deren Rueckgabefrist noch laeuft. Der Report zeigt eine Verbesserung, die nur ein Zeitversatz ist.</p>
+            </div>
+            <div class="bk-spalte">
+              <p class="mini-lbl">Was zu tun ist</p>
+              <ol><li>Retouren immer der Bestellung zuordnen, nicht dem Eingangsmonat.</li><li>Kohorten erst bewerten, wenn Rückgabefrist plus Bearbeitungspuffer abgelaufen sind.</li><li>Unfertige Monate im Reporting kennzeichnen statt sie mitzurechnen.</li><li>Vergleiche nur zwischen vollständigen Kohorten ziehen.</li></ol>
+              <dl class="bk-meta">
+                <dt>Aufwand</dt><dd>S, eine Frage der Auswertungslogik</dd>
+                <dt>Wer</dt><dd>Controlling</dd>
+                <dt>Woran du merkst, dass es wirkt</dt><dd>Kohorten-Quote nach Ablauf der Reifezeit gegen die zuvor gemeldete Zahl</dd>
+                <dt class="gegen">Was dabei nicht kaputtgehen darf</dt><dd>keine, das ist eine reine Korrektur der Rechenweise</dd>
+              </dl>
+            </div>
+          </div>
+        </article>
+        <article class="befund-karte">
+          <div class="bk-kopf">
+            <span class="bk-nr">06</span>
+            <h3>Retouren ohne verwertbaren Grund</h3>
+            <span class="bk-hebel">nicht bezifferbar, aber Voraussetzung für jede weitere Auswertung</span>
+          </div>
+          <div class="bk-body">
+            <div class="bk-spalte">
+              <p class="mini-lbl">Was in den Daten steht</p>
+              <p>150 Retouren, 11,5 % aller Fälle, ohne brauchbare Grundangabe.</p>
+              <p class="mini-lbl">Warum das zählt</p>
+              <p>Jede fehlende Angabe ist eine Analyse, die nicht stattfinden kann. Und die Lücken verteilen sich selten gleichmäßig: Wenn ein Artikel oder ein Rückgabeweg auffällig oft ohne Grund erfasst wird, steckt dort meist ein eigener Fall, den niemand sieht.</p>
+              <p class="unsichtbar"><span class="mini-lbl">Warum das im Standard-Report fehlt</span>Leere und Sonstiges-Gruende landen im Report als Restposten und werden nicht weiter angeschaut. Dahinter steckt haeufig ein eigener Fall, etwa nicht abgeholte Sendungen oder ein Prozessfehler.</p>
+            </div>
+            <div class="bk-spalte">
+              <p class="mini-lbl">Was zu tun ist</p>
+              <ol><li>Prüfen, an welcher Stelle der Grund verloren geht: Retourenportal, Wareneingang, manuelle Erfassung.</li><li>Pflichtfeld mit wenigen, klaren Auswahlmöglichkeiten statt Freitext.</li><li>Freitext zusätzlich anbieten, aber nicht als einzige Option.</li><li>Prüfen, ob sich die Lücken auf bestimmte Artikel oder Rückgabewege häufen.</li></ol>
+              <dl class="bk-meta">
+                <dt>Aufwand</dt><dd>M, hängt am System</dd>
+                <dt>Wer</dt><dd>Logistik und Kundenservice</dd>
+                <dt>Woran du merkst, dass es wirkt</dt><dd>Anteil der Retouren ohne Grund, Ziel unter 5 Prozent</dd>
+                <dt class="gegen">Was dabei nicht kaputtgehen darf</dt><dd>Bearbeitungszeit im Wareneingang</dd>
+              </dl>
+            </div>
+          </div>
+        </article>
 
   <h2>Retourenquote je Bestellmonat</h2>
   <p class="hint">Zugeordnet nach Bestellung, nicht nach Retourendatum. Schraffierte Monate sind noch
      nicht vollständig, ihre Quote sieht besser aus als sie ist.</p>
   <svg viewBox="0 0 528 252" role="img" class="chart"><defs><pattern id="unreif" width="7" height="7" patternTransform="rotate(45)" patternUnits="userSpaceOnUse"><rect width="7" height="7" fill="var(--serie)" opacity="0.28"/><line x1="0" y1="0" x2="0" y2="7" stroke="var(--serie)" stroke-width="3"/></pattern></defs><g class="mark"><title>2026-01: 17,0 %</title><rect x="0" y="21.7" width="62" height="168.3" rx="4" fill="var(--serie)"/></g><text x="31.0" y="12.7" class="val mitte">17,0 %</text><text x="31.0" y="210" class="lbl mitte">01.26</text><g class="mark"><title>2026-02: 16,6 %</title><rect x="88" y="26.4" width="62" height="163.6" rx="4" fill="var(--serie)"/></g><text x="119.0" y="17.4" class="val mitte">16,6 %</text><text x="119.0" y="210" class="lbl mitte">02.26</text><g class="mark"><title>2026-03: 19,2 %</title><rect x="176" y="0.0" width="62" height="190.0" rx="4" fill="var(--serie)"/></g><text x="207.0" y="-9.0" class="val mitte">19,2 %</text><text x="207.0" y="210" class="lbl mitte">03.26</text><g class="mark"><title>2026-04: 17,0 % (unvollständig)</title><rect x="264" y="21.8" width="62" height="168.2" rx="4" fill="url(#unreif)"/></g><text x="295.0" y="12.8" class="val mitte">17,0 %</text><text x="295.0" y="210" class="lbl mitte">04.26</text><text x="295.0" y="228" class="mini mitte">unvollständig</text><g class="mark"><title>2026-05: 16,7 % (unvollständig)</title><rect x="352" y="25.3" width="62" height="164.7" rx="4" fill="url(#unreif)"/></g><text x="383.0" y="16.3" class="val mitte">16,7 %</text><text x="383.0" y="210" class="lbl mitte">05.26</text><text x="383.0" y="228" class="mini mitte">unvollständig</text><g class="mark"><title>2026-06: 9,0 % (unvollständig)</title><rect x="440" y="100.8" width="62" height="89.2" rx="4" fill="url(#unreif)"/></g><text x="471.0" y="91.8" class="val mitte">9,0 %</text><text x="471.0" y="210" class="lbl mitte">06.26</text><text x="471.0" y="228" class="mini mitte">unvollständig</text></svg>
 
-  <h2>Was die Retouren kostet</h2>
-  <p class="hint">Erstattung plus Prozesskosten plus Wertverlust je Artikelvariante.
-     Orange markiert: verdient nach Retouren nichts mehr.</p>
-  <svg viewBox="0 0 706 288" role="img" class="chart"><text x="0" y="18.2" class="lbl">Regenjacke Tech · WEI</text><g class="mark"><title>Regenjacke Tech · WEI: 3.851 EUR</title><rect x="176" y="0" width="430.0" height="26" rx="4" fill="#F2653C"/></g><text x="616.0" y="18.2" class="val">3.851 EUR</text><text x="0" y="54.2" class="lbl">Zip-Hoodie Heavy · SCH</text><g class="mark"><title>Zip-Hoodie Heavy · SCH: 3.824 EUR</title><rect x="176" y="36" width="427.0" height="26" rx="4" fill="var(--serie)"/></g><text x="613.0" y="54.2" class="val">3.824 EUR</text><text x="0" y="90.2" class="lbl">Regenjacke Tech · SCH</text><g class="mark"><title>Regenjacke Tech · SCH: 3.416 EUR</title><rect x="176" y="72" width="381.4" height="26" rx="4" fill="#F2653C"/></g><text x="567.4" y="90.2" class="val">3.416 EUR</text><text x="0" y="126.2" class="lbl">Zip-Hoodie Heavy · SCH</text><g class="mark"><title>Zip-Hoodie Heavy · SCH: 3.209 EUR</title><rect x="176" y="108" width="358.3" height="26" rx="4" fill="var(--serie)"/></g><text x="544.3" y="126.2" class="val">3.209 EUR</text><text x="0" y="162.2" class="lbl">Regenjacke Tech · SCH</text><g class="mark"><title>Regenjacke Tech · SCH: 3.118 EUR</title><rect x="176" y="144" width="348.1" height="26" rx="4" fill="#F2653C"/></g><text x="534.1" y="162.2" class="val">3.118 EUR</text><text x="0" y="198.2" class="lbl">Regenjacke Tech · WEI</text><g class="mark"><title>Regenjacke Tech · WEI: 2.850 EUR</title><rect x="176" y="180" width="318.2" height="26" rx="4" fill="#F2653C"/></g><text x="504.2" y="198.2" class="val">2.850 EUR</text><text x="0" y="234.2" class="lbl">Regenjacke Tech · SCH</text><g class="mark"><title>Regenjacke Tech · SCH: 2.636 EUR</title><rect x="176" y="216" width="294.3" height="26" rx="4" fill="var(--serie)"/></g><text x="480.3" y="234.2" class="val">2.636 EUR</text><text x="0" y="270.2" class="lbl">Zip-Hoodie Heavy · WEI</text><g class="mark"><title>Zip-Hoodie Heavy · WEI: 2.597 EUR</title><rect x="176" y="252" width="290.0" height="26" rx="4" fill="var(--serie)"/></g><text x="476.0" y="270.2" class="val">2.597 EUR</text></svg>
+  <h2>Was die Retouren kosten, je Artikelvariante</h2>
+  <p class="hint">Gerechnet als erstatteter Betrag plus Bearbeitungskosten plus Wertverlust bei defekter
+     Ware. Orange markiert heißt: Von dem, was diese Variante im Verkauf verdient hat, bleibt nach Abzug
+     dieser Kosten nichts übrig. Der Artikel kostet unterm Strich Geld.</p>
+  <svg viewBox="0 0 788 288" role="img" class="chart"><text x="0" y="18.2" class="lbl">Regenjacke Tech · JKT-RN-L-WEI</text><g class="mark"><title>Regenjacke Tech · JKT-RN-L-WEI: 3.851 EUR</title><rect x="258" y="0" width="430.0" height="26" rx="4" fill="#F2653C"/></g><text x="698.0" y="18.2" class="val">3.851 EUR</text><text x="0" y="54.2" class="lbl">Zip-Hoodie Heavy · HOOD-ZP-XS-SCH</text><g class="mark"><title>Zip-Hoodie Heavy · HOOD-ZP-XS-SCH: 3.824 EUR</title><rect x="258" y="36" width="427.0" height="26" rx="4" fill="var(--serie)"/></g><text x="695.0" y="54.2" class="val">3.824 EUR</text><text x="0" y="90.2" class="lbl">Regenjacke Tech · JKT-RN-XL-SCH</text><g class="mark"><title>Regenjacke Tech · JKT-RN-XL-SCH: 3.416 EUR</title><rect x="258" y="72" width="381.4" height="26" rx="4" fill="#F2653C"/></g><text x="649.4" y="90.2" class="val">3.416 EUR</text><text x="0" y="126.2" class="lbl">Zip-Hoodie Heavy · HOOD-ZP-S-SCH</text><g class="mark"><title>Zip-Hoodie Heavy · HOOD-ZP-S-SCH: 3.209 EUR</title><rect x="258" y="108" width="358.3" height="26" rx="4" fill="var(--serie)"/></g><text x="626.3" y="126.2" class="val">3.209 EUR</text><text x="0" y="162.2" class="lbl">Regenjacke Tech · JKT-RN-S-SCH</text><g class="mark"><title>Regenjacke Tech · JKT-RN-S-SCH: 3.118 EUR</title><rect x="258" y="144" width="348.1" height="26" rx="4" fill="#F2653C"/></g><text x="616.1" y="162.2" class="val">3.118 EUR</text><text x="0" y="198.2" class="lbl">Regenjacke Tech · JKT-RN-M-WEI</text><g class="mark"><title>Regenjacke Tech · JKT-RN-M-WEI: 2.850 EUR</title><rect x="258" y="180" width="318.2" height="26" rx="4" fill="#F2653C"/></g><text x="586.2" y="198.2" class="val">2.850 EUR</text><text x="0" y="234.2" class="lbl">Regenjacke Tech · JKT-RN-XS-SCH</text><g class="mark"><title>Regenjacke Tech · JKT-RN-XS-SCH: 2.636 EUR</title><rect x="258" y="216" width="294.3" height="26" rx="4" fill="var(--serie)"/></g><text x="562.3" y="234.2" class="val">2.636 EUR</text><text x="0" y="270.2" class="lbl">Zip-Hoodie Heavy · HOOD-ZP-L-WEI</text><g class="mark"><title>Zip-Hoodie Heavy · HOOD-ZP-L-WEI: 2.597 EUR</title><rect x="258" y="252" width="290.0" height="26" rx="4" fill="var(--serie)"/></g><text x="558.0" y="270.2" class="val">2.597 EUR</text></svg>
 
   <h2>Retourengründe</h2>
   <p class="hint">Orange markiert: Gründe, hinter denen sich ein eigener Fall verbergen kann.</p>
@@ -90,15 +268,42 @@
   <h2>Größenbedingte Retouren je Größe</h2><p class='hint'>Hoodie Classic: 114 mal zu klein gegen 6 mal zu groß. Der Artikel faellt klein aus.</p><svg viewBox="0 0 680 180" role="img" class="chart"><text x="0" y="18.2" class="lbl">Größe L</text><g class="mark"><title>Größe L: 30</title><rect x="150" y="0" width="430.0" height="26" rx="4" fill="var(--serie)"/></g><text x="590.0" y="18.2" class="val">30</text><text x="0" y="54.2" class="lbl">Größe M</text><g class="mark"><title>Größe M: 25</title><rect x="150" y="36" width="358.3" height="26" rx="4" fill="var(--serie)"/></g><text x="518.3" y="54.2" class="val">25</text><text x="0" y="90.2" class="lbl">Größe S</text><g class="mark"><title>Größe S: 22</title><rect x="150" y="72" width="315.3" height="26" rx="4" fill="var(--serie)"/></g><text x="475.3" y="90.2" class="val">22</text><text x="0" y="126.2" class="lbl">Größe XL</text><g class="mark"><title>Größe XL: 22</title><rect x="150" y="108" width="315.3" height="26" rx="4" fill="var(--serie)"/></g><text x="475.3" y="126.2" class="val">22</text><text x="0" y="162.2" class="lbl">Größe XS</text><g class="mark"><title>Größe XS: 15</title><rect x="150" y="144" width="215.0" height="26" rx="4" fill="var(--serie)"/></g><text x="375.0" y="162.2" class="val">15</text></svg>
 
   <h2>Artikel im Detail</h2>
-  <p class="hint">Dieselben Zahlen als Tabelle, damit sie kopierbar und prüfbar sind.</p>
+  <p class="hint">Dieselben Zahlen als Tabelle, kopierbar und nachrechenbar. "Ertrag nach Retouren" ist
+     der Rohertrag dieser Variante abzüglich aller Retourenkosten. Steht dort eine negative Zahl, kostet
+     der Artikel im Zeitraum mehr, als er eingebracht hat.</p>
   <table><thead><tr><th>Artikel</th><th>Variante</th><th class="zahl">Retouren</th>
-    <th class="zahl">Kosten</th><th class="zahl">DB nach Retouren</th></tr></thead><tbody>
-    <tr><td>Regenjacke Tech</td><td><code>JKT-RN-L-WEI</code></td><td class="zahl">29</td><td class="zahl">3.851 EUR</td><td class="zahl neg">-907 EUR</td></tr><tr><td>Zip-Hoodie Heavy</td><td><code>HOOD-ZP-XS-SCH</code></td><td class="zahl">38</td><td class="zahl">3.824 EUR</td><td class="zahl">10.103 EUR</td></tr><tr><td>Regenjacke Tech</td><td><code>JKT-RN-XL-SCH</code></td><td class="zahl">25</td><td class="zahl">3.416 EUR</td><td class="zahl neg">-5 EUR</td></tr><tr><td>Zip-Hoodie Heavy</td><td><code>HOOD-ZP-S-SCH</code></td><td class="zahl">31</td><td class="zahl">3.209 EUR</td><td class="zahl">9.171 EUR</td></tr><tr><td>Regenjacke Tech</td><td><code>JKT-RN-S-SCH</code></td><td class="zahl">24</td><td class="zahl">3.118 EUR</td><td class="zahl neg">-102 EUR</td></tr><tr><td>Regenjacke Tech</td><td><code>JKT-RN-M-WEI</code></td><td class="zahl">20</td><td class="zahl">2.850 EUR</td><td class="zahl neg">-122 EUR</td></tr><tr><td>Regenjacke Tech</td><td><code>JKT-RN-XS-SCH</code></td><td class="zahl">19</td><td class="zahl">2.636 EUR</td><td class="zahl">415 EUR</td></tr><tr><td>Zip-Hoodie Heavy</td><td><code>HOOD-ZP-L-WEI</code></td><td class="zahl">26</td><td class="zahl">2.597 EUR</td><td class="zahl">9.535 EUR</td></tr><tr><td>Zip-Hoodie Heavy</td><td><code>HOOD-ZP-L-SCH</code></td><td class="zahl">26</td><td class="zahl">2.597 EUR</td><td class="zahl">9.535 EUR</td></tr><tr><td>Zip-Hoodie Heavy</td><td><code>HOOD-ZP-M-SCH</code></td><td class="zahl">24</td><td class="zahl">2.454 EUR</td><td class="zahl">10.050 EUR</td></tr>
+    <th class="zahl">Umsatz</th><th class="zahl">Retourenkosten</th><th class="zahl">davon vom Umsatz</th>
+    <th class="zahl">Ertrag nach Retouren</th></tr></thead><tbody>
+    <tr><td>Regenjacke Tech</td><td><code>JKT-RN-L-WEI</code></td><td class="zahl">29</td><td class="zahl">9.832 EUR</td><td class="zahl">3.851 EUR</td><td class="zahl">39,2 %</td><td class="zahl neg">-907 EUR</td></tr><tr><td>Zip-Hoodie Heavy</td><td><code>HOOD-ZP-XS-SCH</code></td><td class="zahl">38</td><td class="zahl">20.228 EUR</td><td class="zahl">3.824 EUR</td><td class="zahl">18,9 %</td><td class="zahl">10.103 EUR</td></tr><tr><td>Regenjacke Tech</td><td><code>JKT-RN-XL-SCH</code></td><td class="zahl">25</td><td class="zahl">11.390 EUR</td><td class="zahl">3.416 EUR</td><td class="zahl">30,0 %</td><td class="zahl neg">-5 EUR</td></tr><tr><td>Zip-Hoodie Heavy</td><td><code>HOOD-ZP-S-SCH</code></td><td class="zahl">31</td><td class="zahl">17.980 EUR</td><td class="zahl">3.209 EUR</td><td class="zahl">17,8 %</td><td class="zahl">9.171 EUR</td></tr><tr><td>Regenjacke Tech</td><td><code>JKT-RN-S-SCH</code></td><td class="zahl">24</td><td class="zahl">10.072 EUR</td><td class="zahl">3.118 EUR</td><td class="zahl">30,9 %</td><td class="zahl neg">-102 EUR</td></tr><tr><td>Regenjacke Tech</td><td><code>JKT-RN-M-WEI</code></td><td class="zahl">20</td><td class="zahl">9.112 EUR</td><td class="zahl">2.850 EUR</td><td class="zahl">31,3 %</td><td class="zahl neg">-122 EUR</td></tr><tr><td>Regenjacke Tech</td><td><code>JKT-RN-XS-SCH</code></td><td class="zahl">19</td><td class="zahl">10.192 EUR</td><td class="zahl">2.636 EUR</td><td class="zahl">25,9 %</td><td class="zahl">415 EUR</td></tr><tr><td>Zip-Hoodie Heavy</td><td><code>HOOD-ZP-L-WEI</code></td><td class="zahl">26</td><td class="zahl">17.620 EUR</td><td class="zahl">2.597 EUR</td><td class="zahl">14,7 %</td><td class="zahl">9.535 EUR</td></tr><tr><td>Zip-Hoodie Heavy</td><td><code>HOOD-ZP-L-SCH</code></td><td class="zahl">26</td><td class="zahl">17.620 EUR</td><td class="zahl">2.597 EUR</td><td class="zahl">14,7 %</td><td class="zahl">9.535 EUR</td></tr><tr><td>Zip-Hoodie Heavy</td><td><code>HOOD-ZP-M-SCH</code></td><td class="zahl">24</td><td class="zahl">18.160 EUR</td><td class="zahl">2.454 EUR</td><td class="zahl">13,5 %</td><td class="zahl">10.050 EUR</td></tr>
   </tbody></table>
+
+  <h2>Begriffe</h2>
+  <p class="hint">Damit die Zahlen oben eindeutig sind.</p>
+  <dl class="glossar">
+    <dt>Retouren nach Menge</dt>
+    <dd>Zurückgeschickte Artikel geteilt durch verschickte Artikel. Die gängigste Sicht, gut für die
+        Frage "wie viel Ware kommt zurück".</dd>
+    <dt>Retouren nach Wert</dt>
+    <dd>Erstatteter Betrag geteilt durch verschickten Warenwert. Liegt diese Zahl über der Mengensicht,
+        kommen überdurchschnittlich teure Artikel zurück.</dd>
+    <dt>Bestellungen mit Retoure</dt>
+    <dd>Anteil der Bestellungen, aus denen mindestens ein Artikel zurückkam. Die Sicht auf den Prozess:
+        wie oft läuft eine Bestellung nicht glatt durch.</dd>
+    <dt>Bestellmonat statt Retourenmonat</dt>
+    <dd>Jede Retoure wird der Bestellung zugerechnet, aus der sie stammt, nicht dem Monat, in dem sie
+        eintrifft. Nur so vergleicht man Gleiches mit Gleichem. Der Preis dafür: Die jüngsten Monate
+        sind noch unvollständig und werden hier gekennzeichnet.</dd>
+    <dt>Ertrag nach Retouren</dt>
+    <dd>Was von einer Artikelvariante übrig bleibt, wenn man vom Rohertrag alle Retourenkosten abzieht.
+        Negativ heißt: Der Artikel hat im Zeitraum Geld gekostet.</dd>
+    <dt>Retourenkosten</dt>
+    <dd>Erstatteter Betrag plus Bearbeitungskosten je Vorgang plus Wertverlust bei defekter Ware.
+        Der Bearbeitungssatz ist eine Annahme und unten aufgeführt.</dd>
+  </dl>
 
   <div class="fuss">
     <strong>Annahmen</strong><ul><li>Prozesskostensatz 10.00 EUR je Retouren-Vorgang (EHI-Kernbereich 5 bis 20 EUR, kalibrierbar)</li><li>Rueckgabefenster 60 Tage, Reifepuffer 21 Tage</li><li>Mindest-N je SKU: 3 Retouren</li></ul>
-    <strong>Was mit weiteren Spalten möglich wäre</strong><ul><li><code>delivered_date</code> würde ermöglichen: Wardrobing-Fenster und Latenz ab Zustellung</li><li><code>batch</code> würde ermöglichen: Chargen-Zuordnung exakt (aktuell nur zeitliche Naeherung)</li><li><code>refund_type</code> würde ermöglichen: Revenue-Recovery-Rate (Exchange vs. Refund)</li><li><code>condition</code> würde ermöglichen: Wertverlust real statt Annahme</li></ul>
+    <strong>Was mit weiteren Spalten im Export möglich wäre</strong><ul class="fehlend"><li><strong>Zustelldatum</strong> <code>delivered_date</code><br>Damit ließe sich messen, wie viele Tage zwischen Zustellung und Rücksendung liegen. Sehr späte Rücksendungen kurz vor Fristende sind ein anderer Fall als sofortige, und getragene Ware kommt typischerweise spät zurück.</li><li><strong>Chargennummer</strong> <code>batch</code><br>Damit wäre ein Qualitäts-Ausschlag eindeutig einer Lieferung zuzuordnen. Ohne sie bleibt es bei der zeitlichen Vermutung: viele Defekte in einem Monat, vermutlich dieselbe Charge.</li><li><strong>Art der Erstattung</strong> <code>refund_type</code><br>Also ob der Kunde Geld zurückbekam, einen Gutschein nahm oder umtauschte. Damit ließe sich rechnen, wie viel Umsatz bei einer Retoure tatsächlich verloren geht und wie viel im Haus bleibt.</li><li><strong>Zustand der Rückware</strong> <code>condition</code><br>Also ob der Artikel wieder als neu verkauft werden kann, als B-Ware rausgeht oder entsorgt wird. Damit wäre der Wertverlust echt gerechnet statt geschätzt.</li></ul>
     <p>Jede Zahl stammt aus <code>analysis.json</code>. Nichts davon ist geschätzt.</p>
   </div>
 </div>

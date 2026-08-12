@@ -345,7 +345,11 @@ def analyze(returns_rows, sales_rows, args):
                  "erstattungen": round(sku_refund[sku], 2),
                  "prozesskosten": round(events * args.prozesskosten, 2),
                  "wertverlust_defekt": round(writeoff, 2),
-                 "gesamt": round(total, 2)}
+                 "gesamt": round(total, 2),
+                 "umsatz": round(sku_revenue.get(sku, 0.0), 2),
+                 "verkauft": sku_sold.get(sku, 0)}
+        if sku_revenue.get(sku):
+            entry["kosten_anteil_am_umsatz"] = round(total / sku_revenue[sku], 4)
         if sku in sku_unit_cost and sku_sold.get(sku):
             marge_vor = sku_revenue[sku] - sku_sold[sku] * sku_unit_cost[sku]
             entry["deckungsbeitrag_vor_retouren"] = round(marge_vor, 2)
