@@ -47,10 +47,10 @@ Immer diese Felder, immer in dieser Reihenfolge. Ein Report ohne Maßnahmen ist 
 
 ### Nicht abgeholte Sendungen
 **Was zu tun ist:**
-1. Erinnerung auslösen, sobald der Carrier "im Paketshop hinterlegt" meldet. Die Abholfristen liegen typischerweise bei sieben bis vierzehn Tagen, danach geht das Paket automatisch zurück.
-2. Adressqualität im Checkout prüfen (Validierung, Vorschläge, Tippfehler-Erkennung).
+1. Erinnerung auslösen, sobald der Carrier "im Paketshop hinterlegt" meldet. Fristen: DHL-Filiale und Packstation sieben Tage, Hermes bis zu zehn. Danach geht das Paket automatisch zurück. Dass Kommunikation wirkt, ist belegt: Laut Sendcloud-Befragung haben 20 Prozent nach der ersten Tracking-Nachricht Zustellzeit oder Zustellort geändert.
+2. Adressqualität im Checkout prüfen (Validierung, Vorschläge, Tippfehler-Erkennung). Größenordnung: Laut Deutsche Post Direkt (Auswertung von rund 120 Millionen Adressen) sind im Onlinehandel 8,7 Prozent der Kundenadressen fehlerhaft. Nach Loqate scheitern in Deutschland rund 7 Prozent der Zustellungen im ersten Versuch, zu Kosten von durchschnittlich 14,69 Euro je Fall.
 3. Zustelloptionen anbieten: Wunschort, Paketshop-Wahl, Wunschtag.
-4. Wenn eine Zahlart auffällig überrepräsentiert ist, das Risiko dort gezielt steuern, nicht die Zahlart abschalten.
+4. Bei auffälliger Zahlart: sehr vorsichtig bleiben. Die Korrelation zwischen Rechnungskauf und Retouren ist gut belegt (Asdecker, n = 538: 25,3 Prozent bei Rechnung gegen 13,1 Prozent bei Vorkasse), die Wirkungsrichtung aber nicht. Laut ECC Köln wählen Kunden, die eine Retoure einplanen, doppelt so häufig Rechnung. Die Zahlart erzeugt das Verhalten also nicht, sie zieht es an. ibi research widerspricht der naheliegenden Konsequenz ausdrücklich: Wer Zahlarten wegnimmt, verliert eher den Umsatz an die Konkurrenz, als dass er Retouren spart. Also Risiko im Einzelfall steuern, niemals eine Zahlart pauschal abschalten.
 5. Rechtlich einordnen: Eine Annahmeverweigerung ist kein Widerruf. Der Mehraufwand ist grundsätzlich geltend zu machen, praktisch bleibt der Händler meist darauf sitzen. Deshalb ist Vermeidung der einzige verlässliche Hebel.
 
 **Aufwand:** 1 und 3 sind M, 2 ist S bis M, 4 ist M mit Finance.
@@ -105,6 +105,12 @@ Immer diese Felder, immer in dieser Reihenfolge. Ein Report ohne Maßnahmen ist 
 2. Nettobeitrag je Kunde rechnen, bevor irgendetwas passiert.
 3. Bei echten Ausreißern persönlich ansprechen, oft löst das mehr als jede Regel.
 4. Erst danach über Steuerung nachdenken (Zahlarten, Kulanzgrenzen), immer als Einzelfall.
+
+**Kalibrierung, damit die Liste nicht überzieht:** Der von Händlern geschätzte Missbrauchsanteil (19,1 Prozent) liegt um den Faktor fünf über dem, was Verbraucherbefragungen als tatsächliche Missbrauchsabsicht messen (3,6 Prozent, Uni Bamberg). Wer Maßnahmen auf das Bauchgefühl auslegt, überdimensioniert massiv. Zum Vergleich aus der Praxis: OTTO greift laut eigener Auskunft erst bei rund 90 Prozent Retourenquote ein, und zwar dreistufig (Hinweis per Mail, dann Wegfall des Rechnungskaufs, erst zuletzt Sperre). REI in den USA beziffert die betroffene Gruppe auf unter 0,02 Prozent der Mitglieder.
+
+**Rechtlicher Rahmen (Deutschland):** Eine Kontosperre allein wegen häufiger Widerrufe sanktioniert die Ausübung eines gesetzlichen Rechts und ist damit angreifbar; belastbare Rechtsprechung dazu fehlt weitgehend. Die Deckelung von Zahlarten ist der deutlich sicherere Hebel, weil niemand Anspruch auf eine bestimmte Zahlart hat und das Widerrufsrecht unangetastet bleibt. Rücksendekosten dem Kunden aufzuerlegen ist ausdrücklich zulässig (§ 357 Abs. 6 BGB).
+
+**Wenn du eine Regel verschärfst, erkläre warum.** Restriktive Änderungen senken Vertrauen, Kaufabsicht und Weiterempfehlung. Eine mitgelieferte Begründung fängt das messbar ab, und es macht keinen Unterschied, ob du auf Kosten oder auf Missbrauch abstellst (Abdulla, Ketzenberg, Abbey, Heim 2025, Journal of Operations Management). Schweigen ist die schlechteste Variante.
 
 **Aufwand:** S für die Sichtung, M für alles Weitere.
 **Wer:** Kundenservice, bei Zahlarten Finance.
@@ -168,3 +174,17 @@ Damit eine Zahl einordbar wird, hier gemessene Effekte anderer Retouren-Maßnahm
 Retourengründe im deutschen Onlinehandel (Bitkom Research 2024, 1.050 Online-Shopper, Mehrfachnennung): Größe passte nicht 67 Prozent, Produkt defekt 56 Prozent, gefiel nicht 50 Prozent, **entsprach nicht dem Bild oder der Beschreibung 41 Prozent**, bewusst zu viel bestellt 29 Prozent.
 
 Größe und Erwartungs-Mismatch sind damit die beiden großen Blöcke. Genau dort setzen die ersten beiden Maßnahmen an.
+
+## Kulanz ist nicht ein Regler, sondern fünf
+
+Die Meta-Analyse von Janakiraman, Syrdal und Freling (Journal of Retailing 2016, über 20 Studien) trennt fünf Kulanz-Dimensionen: Frist, Geld, Aufwand, Umfang und Umtausch. Der Befund ist für jede Policy-Diskussion entscheidend, weil die Dimensionen gegenläufig wirken:
+
+- **Käufe steigern:** großzügige Geld-zurück-Regelung und wenig Aufwand für den Kunden.
+- **Retouren senken:** lange Frist und Umtausch statt Erstattung.
+- **Retouren treiben:** großzügiger Umfang (was alles zurückgehen darf) und die reine Geld-zurück-Garantie.
+
+Praktische Konsequenz: Wer Kulanz zurücknehmen will, sollte nicht an der Frist ansetzen. Die lange Frist ist die Dimension, die Käufe kaum bremst und Retouren sogar senkt (Kunden entscheiden ohne Zeitdruck und behalten häufiger). Wer dagegen den Umfang begrenzt, trifft den Hebel, der Retouren wirklich treibt.
+
+**Kostenlose Rücksendung, sauber gemessen:** Patel u.a. (Journal of Operations Management 2021) konnten die Einführung in einem Land gegen sechs Vergleichsländer testen. Ergebnis: Bestellwert plus 9,15 Prozent, Bruttomarge je Bestellung plus 9,71 Prozent, Retouren je Bestellung plus 7,86 Prozent. Kurzfristig übersteigen die Retourenkosten den Margenzuwachs. Das ist die beste verfügbare Zahl für diese Entscheidung.
+
+**Rücksendegebühren:** Die kursierende Zahl "2,95 Euro Gebühr würde 16 Prozent der Retouren vermeiden" ist eine Händler-Schätzung aus einer Befragung, keine Messung, und wird vom bevh selbst ausdrücklich relativiert. Händler, die bereits Gebühren erheben, berichten von durchschnittlich 1,4 Prozent Umsatzrückgang, während Händler ohne Gebühren 16,2 Prozent befürchten (n = 21, nicht repräsentativ). Zweiter Effekt, den man mitdenken muss: Die Gebühr vertreibt vor allem jüngere Kundengruppen zur Konkurrenz. Die Quote sinkt dann, weil das Segment abwandert, nicht weil das Verhalten sich ändert.

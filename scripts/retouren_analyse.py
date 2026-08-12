@@ -272,11 +272,15 @@ def analyze(returns_rows, sales_rows, args):
                 bracketing_with_return += 1
 
     # ---- Serien-Retournierer (Review-Liste, keine Sanktion)
+    # Schwellen bewusst konservativ: OTTO greift laut eigener Auskunft erst bei rund 90 Prozent
+    # Retourenquote ein, und der real gemessene Missbrauchsanteil (3,6 Prozent) liegt weit unter
+    # dem von Haendlern geschaetzten (19,1 Prozent). Zu niedrige Schwellen produzieren
+    # Verdaechtigungen gegen normale Kunden.
     serial = []
     for cust, ret_orders in customer_return_orders.items():
         n_orders = len(customer_orders.get(cust, set()))
         rate = len(ret_orders) / n_orders if n_orders else None
-        if (n_orders >= 3 and rate is not None and rate >= 0.4) or customer_return_count[cust] >= 5:
+        if (n_orders >= 5 and rate is not None and rate >= 0.7) or customer_return_count[cust] >= 10:
             serial.append({"kunde": cust, "bestellungen": n_orders,
                            "bestellungen_mit_retoure": len(ret_orders),
                            "retouren_positionen": customer_return_count[cust],
