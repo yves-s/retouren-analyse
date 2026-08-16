@@ -1,6 +1,6 @@
 ---
 name: retouren-analyse
-description: Erkennt Muster in E-Commerce-Retourendaten (CSV-Export aus ERP- oder Shop-System) und leitet priorisierte Maßnahmen ab. Nutzen bei "Retouren analysieren", "Retourenquote", "warum kommen Produkte zurück", "Retouren-Report", oder wenn ein Retouren-/Returns-Export als CSV vorliegt. Arbeitet system-agnostisch (Xentral, Shopify, WooCommerce, generisch), braucht keine API und keine sensiblen Live-Zugänge.
+description: Erkennt Muster in E-Commerce-Retourendaten (CSV-Export aus ERP- oder Shop-System) und leitet priorisierte Maßnahmen ab. Nutzen bei "Retouren analysieren", "Retourenquote", "warum kommen Produkte zurück", "Retouren-Report", "Retourenkosten", "Serien-Retournierer", "Größe stimmt nicht" oder immer, wenn eine CSV mit Retouren- oder Rücksende-Spalten vorliegt, auch wenn der Nutzer weder "Retoure" noch "Skill" sagt, sondern nur den Export schickt. Arbeitet system-agnostisch (Xentral, Shopify, WooCommerce, generisch), braucht keine API und keine sensiblen Live-Zugänge.
 ---
 
 # Retouren-Analyse
@@ -29,17 +29,13 @@ python3 scripts/retouren_analyse.py --retouren <retouren.csv> --verkaeufe <verka
 
 Relevante Parameter (Defaults sind markierte Annahmen): `--prozesskosten` (EUR je Retoure, Default 10.00, EHI-Kernbereich 5 bis 20), `--rueckgabefenster` (Tage, Default 60), `--min-retouren` (Mindest-N je SKU, Default 3), `--reifepuffer` (Tage, Default 21).
 
-### Phase 3: Dashboard erzeugen
+### Phase 3: Interpretieren und berichten
 
-```bash
-python3 scripts/dashboard.py --analyse analysis.json --out dashboard.html --titel "<Shop> · <Zeitraum>"
-```
+Der Report kommt vor dem Dashboard. Er ist der Kern, und er ist das Einzige, was in einer Live-Session mitlesbar entsteht: Solange Text läuft, wartet niemand. Lies `analysis.json` dafür **einmal komplett**, nicht stückweise.
 
-Erzeugt eine eigenständige HTML-Datei ohne externe Abhängigkeiten (Kennzahlen, blinde Flecken, Kohorten-Chart, Kosten je Artikel, Retourengründe, Zahlart-Kontrast, Größen-Verteilung, dazu alle Zahlen als Tabelle). Öffnet sich im Browser, hat einen Dunkelmodus und lässt sich weiterreichen. Sag dem Nutzer den Dateipfad.
+Gib **Verdict, Kennzahlen und Findings zuerst aus** und schreib danach weiter. Damit steht nach kurzer Zeit das Wichtigste da und der Rest entsteht, während der Nutzer schon liest.
 
-### Phase 4: Interpretieren und berichten
-
-Der Report ist die Erzählung zum Dashboard. Schreib ihn aus `analysis.json` in dieser Struktur:
+Schreib den Report aus `analysis.json` in dieser Struktur:
 
 1. **Verdict:** zwei, drei Sätze. Das teuerste Muster zuerst, in Euro.
 2. **Kennzahlen:** Beta-, Gamma- und Bestellquote je Bestell-Kohorte. Unreife Kohorten (Flag `mature: false`) immer als vorläufig kennzeichnen.
@@ -48,10 +44,27 @@ Der Report ist die Erzählung zum Dashboard. Schreib ihn aus `analysis.json` in 
    - `hypothesis`: plausible Deutung, aus den Daten allein nicht beweisbar
    - `needs_data`: erst mit zusätzlicher Spalte oder Quelle prüfbar
 4. **Was sonst untergegangen wäre:** der Abschnitt `blinde_flecken` aus der Analyse. Das sind Befunde, die ein normaler Retouren-Report strukturell nicht zeigt, etwa ein Scheintrend durch unreife Kohorten, ein Merkmal das erst in der Kreuzung auffällt, oder ein Artikel der brutto verdient und nach Retouren nichts übrig lässt. Je Befund immer beides sagen: was da ist, und warum es im Standard-Report unsichtbar bleibt. Dieser Abschnitt ist der eigentliche Grund, warum jemand die Analyse fährt; schreib ihn nicht als Fußnote.
-5. **Maßnahmen:** je bestätigtem Muster eine Maßnahme im Format aus `reference/massnahmen.md`. Pflichtfelder je Maßnahme: Was passiert, Warum es zählt, Größe des Hebels in Euro, Was zu tun ist (nummerierte Schritte), Aufwand, Wer, Woran du merkst dass es wirkt, Was dabei nicht kaputtgehen darf. Reihenfolge nach Geld und Aufwand: teuer und schnell zuerst.
+5. **Maßnahmen:** je bestätigtem Muster eine Maßnahme im Format aus `reference/massnahmen.md`. Pflichtfelder je Maßnahme: Was passiert, Warum es zählt, Größe des Hebels in Euro, Was zu tun ist (nummerierte Schritte), Aufwand, Wer, Woran du merkst dass es wirkt, Was dabei nicht kaputtgehen darf. Reihenfolge nach Geld und Aufwand: teuer und schnell zuerst. Prüfe jede Maßnahme gegen `reference/evidenz.md`: nur empfehlen, was dort als gemessen wirksam gilt, und die dort widerlegten Maßnahmen (etwa Größenberater-Software oder das Streichen von Zahlarten) nie vorschlagen.
 6. **Was auffällig aussieht, aber in Ordnung ist:** Pflichtabschnitt. Nenne mindestens zwei Dinge, die du geprüft und für unbedenklich befunden hast, mit der Zahl dazu (etwa Kanäle oder Zahlarten, die dicht beieinander liegen). Bleibt der Abschnitt leer, hast du nicht genau genug hingeschaut. Er verhindert, dass jede Zahl zum Problem erklärt wird.
 7. **Offene Fragen:** was du aus den Daten allein nicht entscheiden kannst und der Mensch beantworten muss (etwa ob ein Ausschlag eine Charge war oder eine Kampagne). Fragen stellen statt behaupten.
 8. **Annahmen und fehlende Daten:** alle Default-Annahmen (Prozesskostensatz usw.) und alles, was mit weiteren Spalten möglich würde.
+
+### Phase 4: Dashboard erzeugen
+
+```bash
+python3 scripts/dashboard.py --analyse analysis.json --out dashboard.html --titel "<Shop> · <Zeitraum>"
+```
+
+Erzeugt eine eigenständige HTML-Datei ohne externe Abhängigkeiten (Kennzahlen, blinde Flecken, Kohorten-Chart, Kosten je Artikel, Retourengründe, Zahlart-Kontrast, Größen-Verteilung, dazu alle Zahlen als Tabelle). Öffnet sich im Browser, hat einen Dunkelmodus und lässt sich weiterreichen. Es zeigt dieselben Befunde wie der Report, nur visuell, und steht deshalb am Schluss: erst die Erzählung, dann das Bild zum Weiterreichen. Sag dem Nutzer den Dateipfad.
+
+## Tempo
+
+Die beiden Scripts laufen zusammen in unter einer Sekunde. Jede Minute eines Laufs geht auf Lesen und Schreiben, und genau vier Dinge kosten unnötig Zeit:
+
+- **`analysis.json` in einem Zug lesen.** Die Datei ist rund 20 KB, das ist ein einziger Read. Sie in Abschnitte zu zerlegen kostet nur Roundtrips.
+- **`reference/massnahmen.md` und `reference/evidenz.md` mit dem Read-Tool laden, nicht per `cat` in der Shell.** Über die Shell landen große Dateien in einer Zwischendatei, die du danach nochmal lesen musst.
+- **Das Dashboard nicht im Browser gegenprüfen.** Es ist deterministischer Script-Output. Ein Screenshot beweist nichts und kostet in einer Live-Session eine Minute.
+- **Nicht in Ausgabe-Dateien aufräumen,** also keine Diffs gegen alte Stände und kein Verschieben, solange der Nutzer nicht danach fragt.
 
 ## Guardrails (hart)
 
@@ -67,4 +80,4 @@ Der Report ist die Erzählung zum Dashboard. Schreib ihn aus `analysis.json` in 
 
 ## Demo
 
-`demo/generate_demo_data.py` erzeugt einen synthetischen Datensatz im Stil eines ERP-Berichte-Exports (Spalten wie bei Xentral üblich, funktioniert aber generisch) mit eingebauten Mustern. Für die Live-Demo: Daten generieren, Script laufen lassen, Report schreiben.
+`demo/generate_demo_data.py` erzeugt einen synthetischen Datensatz im Stil eines ERP-Berichte-Exports (Spalten wie bei Xentral üblich, funktioniert aber generisch) mit eingebauten Mustern. Für die Live-Demo: Daten generieren, Script laufen lassen, Report schreiben, Dashboard zum Schluss. `demo/beispiel-report.md` zeigt einen kompletten Beispiel-Report in der finalen Struktur; bei Unsicherheit über Ton oder Tiefe eines Abschnitts dort nachsehen.
