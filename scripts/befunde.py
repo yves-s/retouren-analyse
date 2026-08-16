@@ -24,6 +24,26 @@ def _num(x):
     return f"{x:,.0f}".replace(",", ".")
 
 
+def _artikel_kosten(d, name):
+    """Retourenkosten eines Artikels ueber alle Varianten.
+
+    Nicht aus kosten_top summieren: die Liste ist auf zehn Zeilen gekuerzt, ein
+    Artikel dahinter kaeme dann mit 0 EUR heraus und rutschte in der nach Geld
+    sortierten Reihenfolge ans Ende.
+    """
+    return next((s["gesamt"] for s in d.get("kosten_je_artikel", []) if s["name"] == name), 0)
+
+
+def _fleck(d, fleck_id):
+    """Blinden Fleck ueber seine stabile ID holen.
+
+    Frueher lief das ueber Teilstrings der Ueberschrift. Das ist einmal still
+    gerissen (die Karte "teuer trotz normaler Quote" fehlte im Dashboard, ohne
+    dass irgendwo ein Fehler auftauchte). Ueber die ID kann das nicht passieren.
+    """
+    return next((f for f in d.get("blinde_flecken", []) if f.get("id") == fleck_id), None)
+
+
 def sammle(d):
     """Liefert eine nach Geldwert sortierte Liste von Befunden."""
     b = []
@@ -31,12 +51,12 @@ def sammle(d):
     flecken = {f["titel"]: f for f in d.get("blinde_flecken", [])}
 
     # --- Artikel ohne Deckungsbeitrag nach Retouren
-    marge = next((f for f in d.get("blinde_flecken", []) if "brutto verdienen" in f["titel"]), None)
+    marge = _fleck(d, "marge_falle")
     if marge and marge.get("artikel"):
         arts = marge["artikel"]
         namen = sorted({a["name"] for a in arts})
         neg = [a for a in arts if a["db_nach_retouren"] < 0]
-        summe = sum(c["gesamt"] for c in kosten if c["name"] in namen)
+        summe = sum(_artikel_kosten(d, n) for n in namen)
         schlimmster = min(arts, key=lambda a: a["db_nach_retouren"])
         b.append({
             "titel": f'{namen[0]} verdient nach Retouren nichts mehr',
@@ -66,7 +86,7 @@ def sammle(d):
     # --- Größen-Läufer
     for l in d.get("groessen_laeufer", [])[:1]:
         gesamt = l["zu_klein"] + l["zu_gross"]
-        art_kosten = sum(c["gesamt"] for c in kosten if c["name"] == l["style"])
+        art_kosten = _artikel_kosten(d, l["style"])
         b.append({
             "titel": f'{l["style"]} {l["richtung"]}',
             "unsichtbar": None,
@@ -103,8 +123,12 @@ def sammle(d):
     # --- Nicht abgeholte Sendungen
     np_ = d.get("nicht_abgeholt") or {}
     if np_.get("sendungen"):
-        schaden = np_["verlorener_umsatz"] + np_["zusatzkosten_versand_annahme"]
-        kontrast = next((f for f in d.get("blinde_flecken", []) if f.get("kontraste")), None)
+        # Fuer die Reihenfolge zaehlt die margenbasierte Zahl, sonst wird dieser Befund gegen
+        # die Artikelkosten kuenstlich gross. Im Text steht trotzdem der verlorene Umsatz,
+        # weil das die Zahl ist, die im Gespraech gemeint ist.
+        schaden = np_.get("schaden_vergleichbar",
+                          np_["verlorener_umsatz"] + np_["zusatzkosten_versand_annahme"])
+        kontrast = _fleck(d, "segment_kontrast")
         k_text = ""
         if kontrast:
             k = kontrast["kontraste"][0]
@@ -144,7 +168,7 @@ def sammle(d):
         })
 
     # --- Teuer trotz normaler Quote
-    vol = next((f for f in d.get("blinde_flecken", []) if "normale Quote" in f["titel"]), None)
+    vol = _fleck(d, "teuer_trotz_normaler_quote")
     if vol and vol.get("artikel"):
         arts = vol["artikel"]
         namen = sorted({a["name"] for a in arts})
@@ -203,7 +227,7 @@ def sammle(d):
         })
 
     # --- Kohorten-Scheintrend
-    koh = next((f for f in d.get("blinde_flecken", []) if "sinken" in f["titel"]), None)
+    koh = _fleck(d, "kohorten_scheintrend")
     if koh:
         unreif = koh.get("unreife_kohorten", [])
         b.append({
@@ -238,7 +262,7 @@ def sammle(d):
         })
 
     # --- Retouren ohne Grund
-    og = next((f for f in d.get("blinde_flecken", []) if "keinen brauchbaren Grund" in f["titel"]), None)
+    og = _fleck(d, "gruende_fehlen")
     if og:
         b.append({
             "titel": "Retouren ohne verwertbaren Grund",

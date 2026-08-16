@@ -97,6 +97,9 @@ def analyze(returns_rows, sales_rows, args):
         f"Prozesskostensatz {args.prozesskosten:.2f} EUR je Retouren-Vorgang (EHI-Kernbereich 5 bis 20 EUR, anpassbar)",
         f"Rückgabefenster {args.rueckgabefenster} Tage, Reifepuffer {args.reifepuffer} Tage",
         f"Mindest-N je SKU: {args.min_retouren} Retouren",
+        "Retourenkosten = entgangene Marge der zurückgeschickten Stücke plus Prozesskosten plus "
+        "abgeschriebene Defektware. Der erstattete Umsatz zählt nicht als Kosten, weil die Ware "
+        "wieder ins Lager geht; als defekt gemeldete Stücke werden voll abgeschrieben.",
     ]
     warnings = []
 
@@ -198,7 +201,7 @@ def analyze(returns_rows, sales_rows, args):
             customer_return_count[cust] += 1
 
         if reason == "nicht_abgeholt_annahme_verweigert":
-            nonpickup.append({"order": oid, "refund": refund,
+            nonpickup.append({"order": oid, "refund": refund, "sku": sku, "qty": qty,
                               "payment": order_payment.get(oid, row.get("payment_method", "unbekannt"))})
         if reason == "qualitaet_defekt" and d:
             defect_by_sku_month[style][month_key(d)] += qty
@@ -332,8 +335,18 @@ def analyze(returns_rows, sales_rows, args):
     serial.sort(key=lambda e: e["retouren_positionen"], reverse=True)
 
     # ---- Nicht abgeholte Sendungen
+    def marge_je_stueck(sku):
+        """Rohertrag je verkauftem Stueck. None, wenn kein Einkaufspreis geliefert wurde."""
+        if sku not in sku_unit_cost or not sku_sold.get(sku):
+            return None
+        return (sku_revenue[sku] - sku_sold[sku] * sku_unit_cost[sku]) / sku_sold[sku]
+
     np_orders = {e["order"] for e in nonpickup if e["order"]}
     np_value = sum(e["refund"] for e in nonpickup)
+    # Auch hier gilt: die Ware kommt ungeoeffnet zurueck ins Lager. Verlorener Umsatz ist die
+    # richtige Zahl fuers Gespraech, vergleichbar mit den Artikelkosten ist aber nur die Marge.
+    np_marge = sum((e["qty"] * m) for e in nonpickup
+                   if (m := marge_je_stueck(e["sku"])) is not None)
     np_payment = Counter()
     seen_np = set()
     for e in nonpickup:
@@ -346,7 +359,9 @@ def analyze(returns_rows, sales_rows, args):
         "anteil_an_bestellungen": round(len(np_orders) / len(orders), 4) if orders else None,
         "anteil_an_retouren_vorgaengen": round(len(np_orders) / len(orders_with_return), 4) if orders_with_return else None,
         "verlorener_umsatz": round(np_value, 2),
+        "entgangene_marge": round(np_marge, 2),
         "zusatzkosten_versand_annahme": round(len(np_orders) * args.prozesskosten, 2),
+        "schaden_vergleichbar": round(np_marge + len(np_orders) * args.prozesskosten, 2),
         "zahlart_verteilung_nicht_abgeholt": dict(np_payment),
         "zahlart_verteilung_alle_bestellungen": dict(overall_payment),
     }
@@ -380,24 +395,91 @@ def analyze(returns_rows, sales_rows, args):
 
     # ---- Kosten-Attribution je SKU
     costs = []
+    ohne_ek = 0
     for sku, events in sku_return_events.items():
         writeoff = sku_defect_qty.get(sku, 0) * sku_unit_cost.get(sku, 0.0)
-        total = sku_refund[sku] + events * args.prozesskosten + writeoff
+        prozess = events * args.prozesskosten
         entry = {"sku": sku, "name": sku_name.get(sku, sku), "retouren_vorgaenge": events,
-                 "erstattungen": round(sku_refund[sku], 2),
-                 "prozesskosten": round(events * args.prozesskosten, 2),
+                 "retournierte_menge": round(sku_returned[sku], 2),
+                 "erstatteter_umsatz": round(sku_refund[sku], 2),
+                 "prozesskosten": round(prozess, 2),
                  "wertverlust_defekt": round(writeoff, 2),
-                 "gesamt": round(total, 2),
                  "umsatz": round(sku_revenue.get(sku, 0.0), 2),
                  "verkauft": sku_sold.get(sku, 0)}
-        if sku_revenue.get(sku):
-            entry["kosten_anteil_am_umsatz"] = round(total / sku_revenue[sku], 4)
         if sku in sku_unit_cost and sku_sold.get(sku):
+            # Der erstattete Umsatz ist kein Verlust, die Ware kommt zurueck ins Lager.
+            # Verloren ist die Marge, die auf dem Stueck nicht verdient wurde. Damit ist
+            # gesamt exakt der Rueckgang des Deckungsbeitrags: DB nach = DB vor minus gesamt.
             marge_vor = sku_revenue[sku] - sku_sold[sku] * sku_unit_cost[sku]
+            entgangene_marge = sku_returned[sku] * (marge_vor / sku_sold[sku])
+            total = entgangene_marge + prozess + writeoff
+            entry["entgangene_marge"] = round(entgangene_marge, 2)
+            entry["kostenbasis"] = "entgangene_marge"
             entry["deckungsbeitrag_vor_retouren"] = round(marge_vor, 2)
             entry["deckungsbeitrag_nach_retouren"] = round(marge_vor - total, 2)
+        else:
+            # Ohne unit_cost ist die Marge nicht rechenbar. Ersatzgroesse ist der erstattete
+            # Umsatz, der die Kosten deutlich ueberzeichnet. Steht als Warnung im Report.
+            total = sku_refund[sku] + prozess + writeoff
+            entry["kostenbasis"] = "erstatteter_umsatz"
+            ohne_ek += 1
+        entry["gesamt"] = round(total, 2)
+        if sku_revenue.get(sku):
+            entry["kosten_anteil_am_umsatz"] = round(total / sku_revenue[sku], 4)
         costs.append(entry)
     costs.sort(key=lambda e: e["gesamt"], reverse=True)
+    if ohne_ek:
+        warnings.append(
+            f"{ohne_ek} Artikel ohne unit_cost: dort ist ersatzweise der erstattete Umsatz als "
+            f"Kostenbasis angesetzt. Das ueberzeichnet die Retourenkosten deutlich, weil die "
+            f"zurueckgeschickte Ware wieder im Lager liegt.")
+
+    # Dieselben Kosten je Artikel statt je Variante. Sechs auffaellige Varianten desselben
+    # Artikels sind eine Ursache und eine Massnahme, nicht sechs. Ausserdem ist kosten_top
+    # auf zehn Zeilen gekuerzt, ein Artikel dahinter haette sonst gar keinen Eurobetrag.
+    style_costs = {}
+    for c in costs:
+        s = style_costs.setdefault(c["name"], {"name": c["name"], "varianten": 0,
+                                               "retouren_vorgaenge": 0, "entgangene_marge": 0.0,
+                                               "prozesskosten": 0.0, "wertverlust_defekt": 0.0,
+                                               "gesamt": 0.0})
+        s["varianten"] += 1
+        s["retouren_vorgaenge"] += c["retouren_vorgaenge"]
+        s["entgangene_marge"] += c.get("entgangene_marge", 0.0)
+        s["prozesskosten"] += c["prozesskosten"]
+        s["wertverlust_defekt"] += c["wertverlust_defekt"]
+        s["gesamt"] += c["gesamt"]
+    kosten_je_artikel = sorted(style_costs.values(), key=lambda e: e["gesamt"], reverse=True)
+    for s in kosten_je_artikel:
+        for k in ("entgangene_marge", "prozesskosten", "wertverlust_defekt", "gesamt"):
+            s[k] = round(s[k], 2)
+
+    # ---- Ertragsrechnung ueber alle Artikel, nicht nur die teuersten zehn
+    # Ohne Einkaufspreis laesst sich kein Rohertrag rechnen, deshalb zaehlt nur, wofuer
+    # unit_cost geliefert wurde. Wie viel Umsatz das abdeckt, steht als Quote dabei.
+    ek_skus = [s for s in sku_sold if s in sku_unit_cost]
+    e_umsatz = sum(sku_revenue.get(s, 0.0) for s in ek_skus)
+    e_erstattet = sum(sku_refund.get(s, 0.0) for s in ek_skus)
+    e_we_behalten = sum(max(sku_sold[s] - sku_returned.get(s, 0), 0) * sku_unit_cost[s] for s in ek_skus)
+    e_we_gesamt = sum(sku_sold[s] * sku_unit_cost[s] for s in ek_skus)
+    e_costs = [c for c in costs if c.get("kostenbasis") == "entgangene_marge"]
+    e_prozess = sum(c["prozesskosten"] for c in e_costs)
+    e_abschr = sum(c["wertverlust_defekt"] for c in e_costs)
+    e_marge_weg = sum(c["entgangene_marge"] for c in e_costs)
+    ertragsrechnung = {
+        "bruttoumsatz": round(e_umsatz, 2),
+        "erstatteter_umsatz": round(e_erstattet, 2),
+        "nettoumsatz": round(e_umsatz - e_erstattet, 2),
+        "wareneinsatz_behaltene_ware": round(e_we_behalten, 2),
+        "rohertrag_vor_retouren": round(e_umsatz - e_we_gesamt, 2),
+        "rohertrag_behaltene_ware": round(e_umsatz - e_erstattet - e_we_behalten, 2),
+        "entgangene_marge": round(e_marge_weg, 2),
+        "retourenbearbeitung": round(e_prozess, 2),
+        "abschreibung_defekt": round(e_abschr, 2),
+        "retourenkosten_gesamt": round(e_marge_weg + e_prozess + e_abschr, 2),
+        "rohertrag_nach_retouren": round(e_umsatz - e_erstattet - e_we_behalten - e_prozess - e_abschr, 2),
+        "umsatzabdeckung": round(e_umsatz / total_shipped_value, 4) if total_shipped_value else None,
+    }
 
     # ---- Blinde Flecken: was ohne diese Analyse untergegangen waere
     # Jeder Eintrag sagt, WAS uebersehen wird und WARUM es der Standard-Report nicht zeigt.
@@ -412,6 +494,7 @@ def analyze(returns_rows, sales_rows, args):
         delta = mature_avg - youngest["beta_quote"]
         if delta > 0.02:
             blind_spots.append({
+                "id": "kohorten_scheintrend",
                 "titel": "Die Retourenquote sieht aus, als würde sie sinken. Tut sie nicht.",
                 "warum_uebersehen": "Wer Retouren eines Monats durch Verkaeufe desselben Monats teilt, misst junge "
                                     "Bestellungen mit, deren Rueckgabefrist noch laeuft. Der Report zeigt eine "
@@ -436,7 +519,8 @@ def analyze(returns_rows, sales_rows, args):
                                 "kosten": c["gesamt"]})
     if hidden_cost:
         blind_spots.append({
-            "titel": "Artikel mit normaler Quote, die trotzdem viel Geld kosten",
+            "id": "teuer_trotz_normaler_quote",
+                "titel": "Artikel mit normaler Quote, die trotzdem viel Geld kosten",
             "warum_uebersehen": "Standard-Reports ranken nach Quote. Ein Artikel mit durchschnittlicher Quote, "
                                 "aber hohem Volumen oder Preis fällt dort nie auf, kostet aber mehr als die "
                                 "Ausreißer.",
@@ -460,6 +544,7 @@ def analyze(returns_rows, sales_rows, args):
                 })
         if contrasts:
             blind_spots.append({
+                "id": "segment_kontrast",
                 "titel": "Ein Merkmal, das erst in der Kreuzung auffällt",
                 "warum_uebersehen": "In der Gesamtsicht liegen alle Zahlarten dicht beieinander, da ist nichts zu "
                                     "sehen. Erst wenn man nur die nicht abgeholten Sendungen anschaut, kippt das "
@@ -472,7 +557,8 @@ def analyze(returns_rows, sales_rows, args):
     total_ret = sum(reason_counter.values())
     if total_ret and unknown / total_ret >= 0.08:
         blind_spots.append({
-            "titel": "Ein relevanter Teil der Retouren hat keinen brauchbaren Grund",
+            "id": "gruende_fehlen",
+                "titel": "Ein relevanter Teil der Retouren hat keinen brauchbaren Grund",
             "warum_uebersehen": "Leere Gründe und Sonstiges landen im Report als Restposten und werden nicht weiter "
                                 "angeschaut. Dahinter steckt häufig ein eigener Fall, etwa nicht abgeholte "
                                 "Sendungen oder ein Prozessfehler.",
@@ -487,6 +573,7 @@ def analyze(returns_rows, sales_rows, args):
                     and c["deckungsbeitrag_nach_retouren"] < 0.25 * c["deckungsbeitrag_vor_retouren"]]
     if margin_traps:
         blind_spots.append({
+            "id": "marge_falle",
             "titel": "Artikel, die brutto verdienen und nach Retouren fast nichts übrig lassen",
             "warum_uebersehen": "Retourenkosten stehen in der Regel nicht am Artikel. In der Sortimentsauswertung "
                                 "sieht der Artikel gesund aus.",
@@ -516,11 +603,36 @@ def analyze(returns_rows, sales_rows, args):
             "fehlende_spalten": missing,
         },
         "quoten": {
-            "gesamt_beta": round(sum(sku_returned.values()) / total_shipped_qty, 4) if total_shipped_qty else None,
-            "gesamt_gamma": round(sum(sku_refund.values()) / total_shipped_value, 4) if total_shipped_value else None,
-            "gesamt_bestellquote": round(len(orders_with_return) / len(orders), 4) if orders else None,
+            # Sechs Nachkommastellen, nicht vier: das Dashboard rundet danach nochmal auf eine
+            # Nachkommastelle in Prozent. Bei vier Stellen wurde daraus zweimal gerundet und
+            # 22,3461 Prozent kamen als 22,4 heraus.
+            "gesamt_beta": round(sum(sku_returned.values()) / total_shipped_qty, 6) if total_shipped_qty else None,
+            "gesamt_gamma": round(sum(sku_refund.values()) / total_shipped_value, 6) if total_shipped_value else None,
+            "gesamt_bestellquote": round(len(orders_with_return) / len(orders), 6) if orders else None,
+            # Zaehler und Nenner offen ausweisen. Eine Quote ohne ihren Bruch ist im Gespraech
+            # nicht verteidigbar, und die drei unterscheiden sich nur durch den Nenner.
+            "basis": {
+                "artikel_versendet": round(total_shipped_qty, 2),
+                "artikel_retourniert": round(sum(sku_returned.values()), 2),
+                "warenwert_versendet": round(total_shipped_value, 2),
+                "warenwert_retourniert": round(sum(sku_refund.values()), 2),
+                "bestellungen": len(orders),
+                "bestellungen_mit_retoure": len(orders_with_return),
+            },
+            # Gamma geteilt durch Beta ist rechnerisch das Verhaeltnis der Durchschnittspreise.
+            # Liegt der Faktor ueber 1, kommt ueberdurchschnittlich Teures zurueck.
+            "preisvergleich": {
+                "schnittpreis_versendet": round(total_shipped_value / total_shipped_qty, 2)
+                if total_shipped_qty else None,
+                "schnittpreis_retourniert": round(sum(sku_refund.values()) / sum(sku_returned.values()), 2)
+                if sum(sku_returned.values()) else None,
+                "faktor": round((sum(sku_refund.values()) / sum(sku_returned.values()))
+                                / (total_shipped_value / total_shipped_qty), 4)
+                if sum(sku_returned.values()) and total_shipped_qty and total_shipped_value else None,
+            },
             "je_kohorte": cohorts,
         },
+        "ertragsrechnung": ertragsrechnung,
         "blinde_flecken": blind_spots,
         "gruende": dict(reason_counter.most_common()),
         "sku_quoten_top": rankable[:10],
@@ -537,6 +649,7 @@ def analyze(returns_rows, sales_rows, args):
         "zahlart_split": split_by(order_payment),
         "kanal_split": split_by(order_channel),
         "kosten_top": costs[:10],
+        "kosten_je_artikel": kosten_je_artikel,
     }
 
 
