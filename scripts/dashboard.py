@@ -136,11 +136,14 @@ GRUND_NAMEN = {
 }
 
 
-def kachel(label, wert, zusatz="", akzent=False):
+def kachel(label, wert, zusatz="", akzent=False, info=""):
+    """Eine KPI-Kachel. info erscheint als Fragezeichen und klappt beim Draufzeigen auf."""
     kl = " akzent" if akzent else ""
     z = f'<div class="zusatz">{esc(zusatz)}</div>' if zusatz else ""
+    i = (f'<span class="info" tabindex="0" aria-label="Erklärung">?'
+         f'<span class="info-text">{esc(info)}</span></span>') if info else ""
     return (
-        f'<div class="kachel{kl}"><div class="klabel">{esc(label)}</div>'
+        f'<div class="kachel{kl}"><div class="klabel">{esc(label)}{i}</div>'
         f'<div class="kwert">{esc(wert)}</div>{z}</div>'
     )
 
@@ -149,19 +152,64 @@ def build(d, titel):
     q = d["quoten"]
     meta = d["meta"]
     kosten = d["kosten_top"]
-    kosten_summe = sum(c["gesamt"] for c in kosten)
-    ertrag_nach = sum(c["deckungsbeitrag_nach_retouren"] for c in kosten
-                      if c.get("deckungsbeitrag_nach_retouren") is not None)
     np_ = d["nicht_abgeholt"]
+    er = d.get("ertragsrechnung", {})
 
     # --- KPI-Zeile
+    # Unter jeder Quote steht ihr Bruch. Die drei Zahlen unterscheiden sich nur im Nenner,
+    # und ohne den ist auf einen Blick nicht zu sehen, worin.
+    basis = q.get("basis", {})
+    pv = q.get("preisvergleich", {})
+    preise = (f'{eur(pv.get("schnittpreis_retourniert"), 2)} je retourniertem Artikel gegenüber '
+              f'{eur(pv.get("schnittpreis_versendet"), 2)} je versendetem Artikel')
+    if pv.get("faktor") and pv["faktor"] > 1:
+        wert_info = (f'Gamma-Retourenquote: Anteil des retournierten Warenwerts am versendeten '
+                     f'Warenwert. Sie liegt über der Mengenquote, die Rückläufer sind also im Schnitt '
+                     f'wertvoller als das versendete Sortiment: {preise}, ein Unterschied von '
+                     f'{pct(pv["faktor"] - 1)}.')
+    elif pv.get("faktor"):
+        wert_info = (f'Gamma-Retourenquote: Anteil des retournierten Warenwerts am versendeten '
+                     f'Warenwert. Sie liegt unter der Mengenquote, die Rückläufer sind also im Schnitt '
+                     f'günstiger als das versendete Sortiment: {preise}.')
+    else:
+        wert_info = "Erstatteter Warenwert geteilt durch versendeten Warenwert. Gamma-Retourenquote."
+
     kacheln = [
-        kachel("Retouren nach Menge", pct(q["gesamt_beta"]), "Beta-Quote"),
-        kachel("Retouren nach Wert", pct(q["gesamt_gamma"]), "Gamma-Quote"),
-        kachel("Bestellungen mit Retoure", pct(q["gesamt_bestellquote"]), f'{num(meta["bestellungen"])} Bestellungen'),
-        kachel("Ertrag nach Retouren", eur(ertrag_nach),
-               f"Rohertrag der ausgewerteten Artikel minus {eur(kosten_summe)} Retourenkosten", akzent=True),
+        kachel("Retouren nach Menge", pct(q["gesamt_beta"]),
+               f'{num(basis.get("artikel_retourniert"))} von {num(basis.get("artikel_versendet"))} Artikeln',
+               info="Beta-Retourenquote: Anteil der retournierten Artikel an allen versendeten "
+                    "Artikeln. Bezugsgröße ist die Stückzahl, der Warenwert bleibt unberücksichtigt. "
+                    "Je Artikel berechenbar und damit die Kennzahl für die Ursachenanalyse."),
+        kachel("Retouren nach Wert", pct(q["gesamt_gamma"]),
+               f'{eur(basis.get("warenwert_retourniert"))} von {eur(basis.get("warenwert_versendet"))}',
+               info=wert_info),
+        kachel("Bestellungen mit Retoure", pct(q["gesamt_bestellquote"]),
+               f'{num(basis.get("bestellungen_mit_retoure"))} von {num(basis.get("bestellungen"))} Bestellungen',
+               info="Anteil der Bestellungen mit mindestens einer Retoure. Liegt systembedingt über "
+                    "der Beta-Quote, da ein einzelner retournierter Artikel die gesamte Bestellung "
+                    "ausweist. Entspricht der Alpha-Quote, die jedoch auf Sendungen bezogen ist."),
+        kachel("Rohertrag nach Retouren", eur(er.get("rohertrag_nach_retouren")),
+               f'Rohertrag {eur(er.get("rohertrag_vor_retouren"))} minus '
+               f'{eur(er.get("retourenkosten_gesamt"))} Retourenkosten', akzent=True,
+               info="Umsatz abzüglich Wareneinsatz der behaltenen Ware, Retourenbearbeitung und "
+                    "abgeschriebener Defektware. Ohne Versand, Verpackung, Zahlungsgebühren und "
+                    "Marketing, entspricht damit keinem vollständigen DB2 und keinem Gewinn."),
     ]
+
+    # --- Wasserfall: vom Umsatz zum Rohertrag nach Retouren, Zeile fuer Zeile nachrechenbar
+    wf_zeilen = [
+        ("Umsatz der versendeten Ware", er.get("bruttoumsatz"), "summe"),
+        ("minus erstatteter Umsatz", -(er.get("erstatteter_umsatz") or 0), "abzug"),
+        ("Nettoumsatz", er.get("nettoumsatz"), "summe"),
+        ("minus Wareneinsatz der behaltenen Ware", -(er.get("wareneinsatz_behaltene_ware") or 0), "abzug"),
+        ("Rohertrag der behaltenen Ware", er.get("rohertrag_behaltene_ware"), "summe"),
+        ("minus Retourenbearbeitung", -(er.get("retourenbearbeitung") or 0), "abzug"),
+        ("minus abgeschriebene Defektware", -(er.get("abschreibung_defekt") or 0), "abzug"),
+        ("Rohertrag nach Retouren", er.get("rohertrag_nach_retouren"), "summe"),
+    ]
+    wasserfall = "".join(
+        f'<tr class="{kl}"><td>{esc(lbl)}</td><td class="zahl">{esc(eur(v))}</td></tr>'
+        for lbl, v, kl in wf_zeilen) if er else ""
 
     # --- Charts
     gruende = [{"grund": GRUND_NAMEN.get(k, k.replace("_", " ")), "n": v}
@@ -215,8 +263,9 @@ def build(d, titel):
         t = b["titel"]
         if "verdient nach Retouren" in t or "unauffällige Quote" in t:
             chart, chart_titel = chart_kosten, "Retourenkosten je Artikelvariante"
-            chart_hint = ("Erstattung plus Bearbeitung plus Wertverlust. Orange markiert: Von dem, was "
-                          "die Variante im Verkauf verdient hat, bleibt danach nichts übrig.")
+            chart_hint = ("Entgangene Marge der zurückgeschickten Stücke plus Bearbeitung plus "
+                          "abgeschriebene Defektware. Orange markiert: Von dem, was die Variante im "
+                          "Verkauf verdient hat, bleibt danach nichts übrig.")
         elif "abgeholt" in t:
             chart, chart_titel = chart_zahlart, "Rechnungskauf: normal gegen auffällig"
             chart_hint = ("Dieselbe Zahlart zweimal gemessen. Je weiter die Balken auseinanderliegen, "
@@ -305,11 +354,12 @@ def build(d, titel):
     --paper: {PAPER}; --ink: {INK}; --serie: {EMERALD}; --moss: {MOSS}; --signal: {SIGNAL};
     --bg: var(--paper); --text: var(--ink); --panel: #fff; --linie: rgba(8,58,42,.12);
     --gedaempft: rgba(8,58,42,.62); --moss-flaeche: {MOSS}; --paper-fest: {PAPER};
+    --overlay: #fff;
   }}
   @media (prefers-color-scheme: dark) {{
     :root {{ --bg: {INK}; --text: {PAPER}; --serie: {EMERALD_HELL};
       --panel: rgba(212,237,224,.06); --linie: rgba(212,237,224,.16); --gedaempft: rgba(250,250,247,.66);
-      --moss-flaeche: rgba(212,237,224,.14); }}
+      --moss-flaeche: rgba(212,237,224,.14); --overlay: #0C4634; }}
   }}
   * {{ box-sizing: border-box; }}
   body {{ margin: 0; background: var(--bg); color: var(--text);
@@ -330,6 +380,35 @@ def build(d, titel):
     text-transform: uppercase; color: var(--gedaempft); }}
   .kwert {{ font-size: 32px; font-weight: 600; letter-spacing: -.02em; margin-top: 6px; }}
   .zusatz {{ font-size: 13px; color: var(--gedaempft); margin-top: 2px; }}
+  /* Der Erklaertext haengt an der Kachel, nicht am Fragezeichen: so ist er genau so breit wie
+     sie, kann seitlich nicht aus dem Fenster laufen, und die ganze Kachel ist die Hoverflaeche.
+     Ein 14px-Ziel zu treffen und dann ueber eine Luecke nachzufassen war unbedienbar. */
+  .kachel {{ position: relative; }}
+  .info {{ display: inline-flex; align-items: center; justify-content: center; width: 15px;
+           height: 15px; margin-left: 6px; border: 1px solid var(--linie); border-radius: 50%;
+           font-size: 10px; line-height: 1; color: var(--gedaempft); cursor: help;
+           vertical-align: middle; letter-spacing: 0; }}
+  .kachel:hover .info, .info:focus-visible {{ color: var(--text); border-color: var(--text); }}
+  .info-text {{ position: absolute; top: calc(100% + 6px); left: -1px; right: -1px;
+                background: var(--overlay); color: var(--text); border: 1px solid var(--linie);
+                padding: 12px 14px; font-family: ui-sans-serif, system-ui, "Inter", sans-serif;
+                font-size: 13px; line-height: 1.5;
+                letter-spacing: 0; text-transform: none; font-weight: 400; text-align: left;
+                opacity: 0; visibility: hidden; transition: opacity .12s; z-index: 30;
+                box-shadow: 0 8px 28px rgba(0,0,0,.16); }}
+  /* focus-visible statt focus: ein Mausklick auf das Fragezeichen setzt sonst den Fokus und
+     der Kasten bleibt offen, bis man irgendwo anders hinklickt. Mit der Tastatur geht er auf. */
+  .kachel:hover .info-text, .info:focus-visible .info-text {{ opacity: 1; visibility: visible; }}
+  /* Ohne Hover (Touch) gibt es nichts zum Draufzeigen. Dort steht der Text einfach fest da. */
+  @media (hover: none) {{
+    .info {{ display: none; }}
+    .info-text {{ position: static; opacity: 1; visibility: visible; margin-top: 10px;
+                  box-shadow: none; background: none; border: 0; padding: 0; font-size: 12px;
+                  color: var(--gedaempft); }}
+  }}
+  .wasserfall td:first-child {{ text-align: left; }}
+  .wasserfall tr.summe td {{ font-weight: 600; border-top: 1px solid var(--text); }}
+  .wasserfall tr.abzug td.zahl {{ color: var(--gedaempft); }}
   .befund-karte {{ background: var(--panel); border: 1px solid var(--linie); }}
   .bk-kopf {{ display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
     padding: 16px 22px; border-bottom: 1px solid var(--linie); }}
@@ -380,10 +459,30 @@ def build(d, titel):
   .warnung {{ background: var(--moss-flaeche); border-left: 3px solid var(--signal);
     padding: 14px 18px; margin: 10px 0 18px; font-size: 14px; }}
   .chart .val-inv {{ font-size: 12.5px; fill: var(--paper-fest); font-weight: 600; }}
-  .glossar {{ margin: 8px 0 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 4px 28px; font-size: 14px; }}
-  .glossar dt {{ font-weight: 600; margin-top: 12px; }}
-  .glossar dd {{ margin: 2px 0 0; color: var(--gedaempft); }}
+  /* Zwei feste Spalten mit Trennlinie je Eintrag. Vorher lief das ueber auto-fit, dann standen
+     Begriff und Erklaerung nicht auf einer Hoehe und man sah nicht, was zusammengehoert. */
+  .glossar {{ margin: 8px 0 0; display: grid; grid-template-columns: minmax(190px, 290px) 1fr;
+    column-gap: 32px; font-size: 14px; }}
+  .glossar dt {{ grid-column: 1; font-weight: 600; margin: 0;
+    border-top: 1px solid var(--linie); padding: 18px 0 18px; }}
+  .glossar dd {{ grid-column: 2; margin: 0; color: var(--gedaempft);
+    border-top: 1px solid var(--linie); padding: 18px 0 18px; }}
+  @media (max-width: 720px) {{
+    .glossar {{ grid-template-columns: 1fr; }}
+    .glossar dt {{ padding-bottom: 6px; }}
+    .glossar dd {{ border-top: 0; padding-top: 0; padding-bottom: 18px; }}
+  }}
+  /* Die Formel steht unter dem Begriff, nicht im Fliesstext: so ist auf einen Blick klar,
+     was durch was geteilt wird, ohne dass der Erklaertext damit anfangen muss. */
+  .dt-formel {{ display: block; font-family: ui-monospace, monospace; font-size: 12px;
+    font-weight: 400; color: var(--gedaempft); margin-top: 3px; }}
+  .glossar dd em {{ font-style: normal; font-weight: 600; color: var(--text); }}
+  .glossar dd strong {{ color: var(--text); font-weight: 600; }}
+  .glossar dd ul {{ margin: 8px 0; padding-left: 18px; }}
+  .glossar dd li {{ margin-bottom: 4px; }}
+  .dd-wofuer {{ display: block; margin-top: 8px; }}
+  .dd-hinweis {{ display: block; margin-top: 8px; padding-left: 10px;
+    border-left: 2px solid var(--linie); font-size: 13px; }}
   .fuss ul.fehlend li {{ margin-bottom: 9px; }}
   code {{ font-family: ui-monospace, monospace; font-size: .92em; }}
 </style></head>
@@ -396,6 +495,13 @@ def build(d, titel):
 
   <div class="kacheln">{"".join(kacheln)}</div>
 
+  <h2>Vom Umsatz zum Rohertrag nach Retouren</h2>
+  <p class="hint">Jede Zeile ist nachrechenbar. Der erstattete Umsatz geht ab, der Einkaufswert der
+     zurückgekommenen Ware aber nicht: Die liegt wieder im Lager. Abgezogen wird nur, was wirklich
+     weg ist. Nicht enthalten sind Versand, Verpackung, Zahlungsgebühren, Marketing und alle
+     Fixkosten. Der Rohertrag nach Retouren ist deshalb kein Gewinn.</p>
+  <div class="tabelle-wrap"><table class="wasserfall"><tbody>{wasserfall}</tbody></table></div>
+
   <h2>Retourenquote je Bestellmonat</h2>
   <p class="hint">Jede Retoure zählt zu dem Monat, in dem bestellt wurde, nicht zu dem, in dem sie
      eintrifft. Nur so sind Monate vergleichbar. Bei den jüngsten Monaten fehlen noch Retouren; dort
@@ -404,8 +510,7 @@ def build(d, titel):
   {kohorten_chart(q["je_kohorte"])}
 
   <h2>Befunde und was zu tun ist</h2>
-  <p class="hint">Nach Geldwert sortiert. Jeder Block enthält die Zahl, ihre Bedeutung und die
-     Maßnahme, damit nichts an anderer Stelle nachgeschlagen werden muss.</p>
+  <p class="hint">Nach Geldwert sortiert, der teuerste Befund zuerst.</p>
   {"".join(karten)}
 
   <h2>Retourengründe</h2>
@@ -415,48 +520,98 @@ def build(d, titel):
   {chart_gruende}
 
   <h2>Artikel im Detail</h2>
-  <p class="hint">Dieselben Zahlen als Tabelle, kopierbar und nachrechenbar. "Ertrag nach Retouren" ist
-     der Rohertrag dieser Variante abzüglich aller Retourenkosten. Steht dort eine negative Zahl, kostet
-     der Artikel im Zeitraum mehr, als er eingebracht hat.</p>
+  <p class="hint">Die drei mittleren Spalten ergeben addiert die Retourenkosten, und Rohertrag minus
+     Retourenkosten ergibt den Rohertrag nach Retouren. Der erstattete Umsatz steht bewusst nicht in
+     der Rechnung: Die Ware kommt zurück ins Lager, verloren ist nur die Marge darauf. Nur als
+     defekt gemeldete Stücke werden voll abgeschrieben.</p>
   <div class="tabelle-wrap"><table><thead><tr><th>Artikel</th><th>Variante</th><th class="zahl">Retouren</th>
-    <th class="zahl">Umsatz</th><th class="zahl">Retourenkosten</th><th class="zahl">davon vom Umsatz</th>
-    <th class="zahl">Ertrag nach Retouren</th></tr></thead><tbody>
+    <th class="zahl">Rohertrag vor Retouren</th><th class="zahl">entgangene Marge</th><th class="zahl">Bearbeitung</th>
+    <th class="zahl">Abschreibung</th><th class="zahl">Retourenkosten</th>
+    <th class="zahl">Rohertrag nach Retouren</th></tr></thead><tbody>
     {"".join(f'<tr><td>{esc(c["name"])}</td><td><code>{esc(c["sku"])}</code></td>'
              f'<td class="zahl">{num(c["retouren_vorgaenge"])}</td>'
-             f'<td class="zahl">{esc(eur(c.get("umsatz")))}</td>'
+             f'<td class="zahl">{esc(eur(c.get("deckungsbeitrag_vor_retouren")))}</td>'
+             f'<td class="zahl">{esc(eur(c["entgangene_marge"]) if c.get("entgangene_marge") is not None else "n/a")}</td>'
+             f'<td class="zahl">{esc(eur(c["prozesskosten"]))}</td>'
+             f'<td class="zahl">{esc(eur(c["wertverlust_defekt"]))}</td>'
              f'<td class="zahl">{esc(eur(c["gesamt"]))}</td>'
-             f'<td class="zahl">{esc(pct(c.get("kosten_anteil_am_umsatz")))}</td>'
              f'<td class="zahl{" neg" if (c.get("deckungsbeitrag_nach_retouren") or 0) < 0 else ""}">'
              f'{esc(eur(c["deckungsbeitrag_nach_retouren"]) if c.get("deckungsbeitrag_nach_retouren") is not None else "n/a")}</td></tr>'
              for c in kosten)}
   </tbody></table></div>
 
-  <h2>Begriffe</h2>
-  <p class="hint">Damit die Zahlen oben eindeutig sind.</p>
+  <h2>Die drei Retourenquoten</h2>
+  <p class="hint">Dieselben Retouren, auf drei verschiedene Bezugsgrößen bezogen. Die Bezeichnungen
+     stammen aus der Retourenforschung der Universität Bamberg (Asdecker) und sind im deutschen
+     Onlinehandel gebräuchlich.</p>
   <dl class="glossar">
-    <dt>Retouren nach Menge</dt>
-    <dd>Zurückgeschickte Artikel geteilt durch verschickte Artikel. Die gängigste Sicht, gut für die
-        Frage "wie viel Ware kommt zurück".</dd>
-    <dt>Retouren nach Wert</dt>
-    <dd>Erstatteter Betrag geteilt durch verschickten Warenwert. Liegt diese Zahl über der Mengensicht,
-        kommen überdurchschnittlich teure Artikel zurück.</dd>
-    <dt>Bestellungen mit Retoure</dt>
-    <dd>Anteil der Bestellungen, aus denen mindestens ein Artikel zurückkam. Die Sicht auf den Prozess:
-        wie oft läuft eine Bestellung nicht glatt durch.</dd>
-    <dt>Bestellmonat statt Retourenmonat</dt>
-    <dd>Jede Retoure wird der Bestellung zugerechnet, aus der sie stammt, nicht dem Monat, in dem sie
-        eintrifft. Nur so vergleicht man Gleiches mit Gleichem. Der Preis dafür: Die jüngsten Monate
-        sind noch unvollständig und werden hier gekennzeichnet.</dd>
-    <dt>Ertrag nach Retouren</dt>
-    <dd>Was von einer Artikelvariante übrig bleibt, wenn man vom Rohertrag alle Retourenkosten abzieht.
-        Negativ heißt: Der Artikel hat im Zeitraum Geld gekostet.</dd>
-    <dt>Position gegen Sendung</dt>
-    <dd>Eine Retourenposition ist ein zurückgeschickter Artikel, eine Sendung ist das Paket dazu.
-        Kommt ein Paket mit drei Artikeln zurück, sind das drei Positionen und eine Sendung. Die
-        Gründe-Auswertung zählt Positionen, die nicht abgeholten Fälle zählen Sendungen.</dd>
+    <dt>Alpha-Retourenquote<span class="dt-formel">zurückgesendete Sendungen ÷ versendete Sendungen</span></dt>
+    <dd>Anteil der zurückgesendeten Sendungen an allen versendeten Sendungen. Bezugsgröße ist der
+        Versandvorgang, unabhängig von Inhalt und Warenwert. Sie ist die Planungsgröße für die
+        Retourenbearbeitung, weil der Aufwand im Wareneingang je Sendung anfällt und nicht je Artikel.
+        Sie liegt systembedingt über der Beta-Quote, da bereits ein einzelner zurückgesendeter Artikel
+        die gesamte Sendung als Retoure ausweist.
+        <span class="dd-hinweis">In diesem Report auf Bestellungen berechnet, weil der Export keine
+        Sendungen ausweist. Bei Teillieferungen weichen beide Größen voneinander ab.</span></dd>
+    <dt>Beta-Retourenquote<span class="dt-formel">retournierte Artikel ÷ versendete Artikel</span></dt>
+    <dd>Anteil der retournierten Artikel an allen versendeten Artikeln. Bezugsgröße ist die Stückzahl,
+        der Warenwert bleibt unberücksichtigt. Sie lässt sich je Artikel berechnen und ist damit die
+        Kennzahl für die Ursachenanalyse auf Produktebene.</dd>
+    <dt>Gamma-Retourenquote<span class="dt-formel">Wert der Retouren ÷ Wert der versendeten Ware</span></dt>
+    <dd>Anteil des retournierten Warenwerts am gesamten versendeten Warenwert. Bezugsgröße ist der
+        Wert, die Stückzahl bleibt unberücksichtigt. Sie beziffert die Erlösschmälerung und das in
+        Rückläufern gebundene Kapital. Im Verhältnis zur Beta-Quote zeigt sie außerdem, ob
+        überdurchschnittlich teure oder überdurchschnittlich günstige Artikel zurückgehen: Liegt die
+        Gamma-Quote höher, sind die Rückläufer im Schnitt wertvoller als das versendete Sortiment.</dd>
+  </dl>
+
+  <h2>Weitere Begriffe</h2>
+  <dl class="glossar">
+    <dt>Kohortensicht (Bestellmonat statt Retourenmonat)</dt>
+    <dd>Zuordnung jeder Retoure zu dem Monat, in dem die zugehörige Bestellung aufgegeben wurde, nicht
+        zu dem Monat des Retoureneingangs. Nur so beziehen sich Zähler und Nenner auf denselben
+        Vorgang und Monate werden vergleichbar. Nachteil: Die jüngsten Monate sind noch unvollständig
+        und werden entsprechend gekennzeichnet.</dd>
+    <dt>Reifegrad</dt>
+    <dd>Anteil des Rückgabefensters, der für einen Bestellmonat bereits abgelaufen ist. Erst bei
+        vollem Reifegrad ist die Quote endgültig. Unvollständige Monate weisen eine zu niedrige Quote
+        aus, weil ausstehende Retouren fehlen.</dd>
+    <dt>Rohertrag vor Retouren</dt>
+    <dd>Umsatz der versendeten Ware abzüglich des zugehörigen Wareneinsatzes, ohne Berücksichtigung
+        von Retouren. Dient als Vergleichswert, um die Wirkung der Retouren sichtbar zu machen.</dd>
+    <dt>Rohertrag nach Retouren</dt>
+    <dd>Umsatz abzüglich Wareneinsatz der vom Kunden behaltenen Ware, abzüglich Retourenbearbeitung
+        und abgeschriebener Defektware. Nicht enthalten sind Versand, Verpackung, Zahlungsgebühren
+        und Marketing; die Kennzahl entspricht damit keinem vollständigen DB2 und keinem Gewinn. Ein
+        negativer Wert bedeutet, dass der Artikel im Zeitraum mehr gekostet als eingebracht hat.</dd>
     <dt>Retourenkosten</dt>
-    <dd>Erstatteter Betrag plus Bearbeitungskosten je Vorgang plus Wertverlust bei defekter Ware.
-        Der Bearbeitungssatz ist eine Annahme und unten aufgeführt.</dd>
+    <dd>Entgangene Marge der retournierten Artikel zuzüglich Bearbeitungskosten je Retourenvorgang und
+        Wertverlust bei defekter Ware. Der erstattete Umsatz ist nicht enthalten, da die Ware dem
+        Bestand wieder zugeht. Der Bearbeitungssatz ist eine Annahme und unten ausgewiesen.</dd>
+    <dt>Entgangene Marge</dt>
+    <dd>Rohertrag, den ein Artikel erwirtschaftet hätte, wäre er nicht retourniert worden. Sie ist der
+        tatsächlich verlorene Anteil einer Retoure. Wird stattdessen die volle Erstattung als Kosten
+        angesetzt, werden die Retourenkosten überzeichnet, besonders deutlich bei Artikeln mit
+        geringer Marge.</dd>
+    <dt>Retourenposition und Sendung</dt>
+    <dd>Eine Retourenposition ist ein einzelner zurückgesendeter Artikel, eine Sendung das zugehörige
+        Paket. Eine Sendung mit drei Artikeln entspricht drei Positionen. Die Auswertung der
+        Retourengründe erfolgt je Position, die nicht abgeholten Fälle werden je Sendung gezählt.</dd>
+    <dt>Mehrgrößen-Bestellung (Bracketing)</dt>
+    <dd>Bestellung von zwei oder mehr Größen desselben Artikels mit der Absicht, einen Teil davon
+        zurückzusenden. Gilt als eingeplante Retoure. Maßnahmen zur Größenberatung sind gegen diese
+        Kennzahl zu messen, da eine sinkende Retourenquote bei gleichzeitig steigenden
+        Mehrgrößen-Bestellungen keinen Vorteil ergibt.</dd>
+    <dt>Mindest-N</dt>
+    <dd>Mindestanzahl an Retouren, ab der ein Artikel in die Auswertung aufgenommen wird. Quoten aus
+        sehr kleinen Fallzahlen sind statistisch nicht belastbar. Artikel unterhalb der Schwelle
+        erscheinen in keiner Rangliste; ihre Anzahl wird im Report ausgewiesen.</dd>
+    <dt>Nicht abgeholte Sendung und Annahmeverweigerung</dt>
+    <dd>Rücklauf einer Sendung, ohne dass sie beim Empfänger geöffnet wurde, weil sie im Paketshop
+        nicht abgeholt oder bei Zustellung abgelehnt wurde. Rechtlich kein Widerruf. Wirtschaftlich
+        die aufwendigste Form der Retoure, da Hin- und Rückversand anfallen, der Umsatz vollständig
+        entfällt und kein Umtausch zustande kommt. In der Versandstatistik erscheint der Vorgang als
+        Zustellung mit anschließender Rücksendung und ist nur im Retourendatensatz erkennbar.</dd>
   </dl>
 
   <div class="fuss">
