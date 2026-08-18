@@ -18,6 +18,7 @@ Du analysierst Retourendaten eines E-Commerce-Shops und findest die Muster, die 
    - Wie lang ist das Rückgabefenster (Policy)?
    - Deckt der Verkaufs-Export den Retouren-Zeitraum plus Rückgabefenster nach vorn ab?
 4. Benenne fehlende optionale Spalten und liste explizit, welche Analysen dadurch entfallen.
+5. **Gib das Ergebnis dieser Phase sofort aus, bevor du rechnest:** welche Spalten gemappt sind, wie viele Zeilen, welcher Zeitraum, was fehlt. Drei, vier Zeilen reichen. In einer Live-Session ist das der erste sichtbare Inhalt, und er soll nach Sekunden dastehen und nicht nach Minuten.
 
 ### Phase 2: Rechnen
 

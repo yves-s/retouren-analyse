@@ -159,6 +159,14 @@ def analyze(returns_rows, sales_rows, args):
     return_latencies = []   # (Tage zwischen Bestellung und Retoure, Bestellmonat)
     defect_by_sku_month = defaultdict(Counter)
     unmatched_orders = 0
+    # Eine nicht abgeholte Sendung ist keine Retoure: rechtlich kein Widerruf, und die Ware
+    # wurde nie ausgepackt. Sie kostet trotzdem Geld und bleibt deshalb in der Kostenrechnung.
+    # Fuer die ausgewiesene Retourenquote wird sie getrennt gezaehlt, sonst meldet der Report
+    # eine Quote, die der Haendler so nirgends wiedererkennt.
+    ret_qty_customer = 0.0
+    ret_qty_nonpickup = 0.0
+    ret_value_customer = 0.0
+    orders_with_customer_return = set()
 
     for row in returns_rows:
         oid = row.get("sales_order_number", "").strip()
@@ -180,9 +188,19 @@ def analyze(returns_rows, sales_rows, args):
             od = order_dates.get(oid)
             if od and d:
                 return_latencies.append(((d - od).days, cohort))
-            ret_qty_by_cohort[cohort] += qty
-            ret_value_by_cohort[cohort] += refund
             orders_with_return.add(oid)
+            # Die Kohorten-Tabelle muss dieselbe Groesse messen wie die Retourenquote oben,
+            # sonst steht im Kopf 14 Prozent und in der Zeile darunter 17.
+            if reason != "nicht_abgeholt_annahme_verweigert":
+                ret_qty_by_cohort[cohort] += qty
+                ret_value_by_cohort[cohort] += refund
+                orders_with_customer_return.add(oid)
+
+        if reason == "nicht_abgeholt_annahme_verweigert":
+            ret_qty_nonpickup += qty
+        else:
+            ret_qty_customer += qty
+            ret_value_customer += refund
 
         sku_returned[sku] += qty
         sku_refund[sku] += refund
@@ -222,7 +240,7 @@ def analyze(returns_rows, sales_rows, args):
     for oid, rows in orders.items():
         ck = order_month[oid]
         cohort_orders[ck] += 1
-        if oid in orders_with_return:
+        if oid in orders_with_customer_return:
             cohort_orders_ret[ck] += 1
         for r in rows:
             cohort_sold_qty[ck] += to_float(r.get("quantity")) or 1.0
@@ -606,6 +624,15 @@ def analyze(returns_rows, sales_rows, args):
             # Sechs Nachkommastellen, nicht vier: das Dashboard rundet danach nochmal auf eine
             # Nachkommastelle in Prozent. Bei vier Stellen wurde daraus zweimal gerundet und
             # 22,3461 Prozent kamen als 22,4 heraus.
+            # Die Kennzahl, die ein Haendler "Retourenquote" nennt: zurueckgeschickte Artikel
+            # geteilt durch versendete Artikel, ohne die nie abgeholten Sendungen. Sie steht
+            # vorn, weil jede Standard-Auswertung mit ihr anfaengt.
+            "retourenquote": round(ret_qty_customer / total_shipped_qty, 6) if total_shipped_qty else None,
+            "retourenquote_wert": round(ret_value_customer / total_shipped_value, 6) if total_shipped_value else None,
+            "retourenquote_bestellungen": round(len(orders_with_customer_return) / len(orders), 6) if orders else None,
+            "nichtabholquote": round(ret_qty_nonpickup / total_shipped_qty, 6) if total_shipped_qty else None,
+            # Dieselben drei Quoten inklusive Nichtabholung, also ueber alle Rueckläufer.
+            # Sie sind der Bezug fuer die Kostenrechnung, denn Kosten fallen bei beidem an.
             "gesamt_beta": round(sum(sku_returned.values()) / total_shipped_qty, 6) if total_shipped_qty else None,
             "gesamt_gamma": round(sum(sku_refund.values()) / total_shipped_value, 6) if total_shipped_value else None,
             "gesamt_bestellquote": round(len(orders_with_return) / len(orders), 6) if orders else None,
@@ -618,6 +645,10 @@ def analyze(returns_rows, sales_rows, args):
                 "warenwert_retourniert": round(sum(sku_refund.values()), 2),
                 "bestellungen": len(orders),
                 "bestellungen_mit_retoure": len(orders_with_return),
+                "artikel_retourniert_kundenretoure": round(ret_qty_customer, 2),
+                "artikel_retourniert_nicht_abgeholt": round(ret_qty_nonpickup, 2),
+                "warenwert_retourniert_kundenretoure": round(ret_value_customer, 2),
+                "bestellungen_mit_kundenretoure": len(orders_with_customer_return),
             },
             # Gamma geteilt durch Beta ist rechnerisch das Verhaeltnis der Durchschnittspreise.
             # Liegt der Faktor ueber 1, kommt ueberdurchschnittlich Teures zurueck.

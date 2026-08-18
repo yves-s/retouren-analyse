@@ -1,2 +1,6 @@
 demo/analysis.json
 __pycache__/
+# Arbeitsstaende aus lokalen Laeufen, gehoeren nicht ins Repo
+/analysis.json
+/dashboard.html
+/skills/

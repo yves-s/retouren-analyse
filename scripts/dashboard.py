@@ -174,17 +174,31 @@ def build(d, titel):
     else:
         wert_info = "Erstatteter Warenwert geteilt durch versendeten Warenwert. Gamma-Retourenquote."
 
+    # Aeltere analysis.json-Staende kennen die getrennten Quoten nicht. Dann auf die
+    # Gesamtwerte zurueckfallen, statt mit einem KeyError auszusteigen.
+    rq = q.get("retourenquote", q["gesamt_beta"])
+    rq_wert = q.get("retourenquote_wert", q["gesamt_gamma"])
+    rq_best = q.get("retourenquote_bestellungen", q["gesamt_bestellquote"])
+    art_kunde = basis.get("artikel_retourniert_kundenretoure", basis.get("artikel_retourniert"))
+    wert_kunde = basis.get("warenwert_retourniert_kundenretoure", basis.get("warenwert_retourniert"))
+    best_kunde = basis.get("bestellungen_mit_kundenretoure", basis.get("bestellungen_mit_retoure"))
+    nicht_abg = basis.get("artikel_retourniert_nicht_abgeholt")
+    abgrenzung = (f' Nicht enthalten sind {num(nicht_abg)} Artikel aus nie abgeholten Sendungen. '
+                  f'Die sind kein Widerruf und keine Retoure, kosten aber Geld und stehen '
+                  f'deshalb in der Kostenrechnung.') if nicht_abg else ""
+
     kacheln = [
-        kachel("Retouren nach Menge", pct(q["gesamt_beta"]),
-               f'{num(basis.get("artikel_retourniert"))} von {num(basis.get("artikel_versendet"))} Artikeln',
-               info="Beta-Retourenquote: Anteil der retournierten Artikel an allen versendeten "
-                    "Artikeln. Bezugsgröße ist die Stückzahl, der Warenwert bleibt unberücksichtigt. "
-                    "Je Artikel berechenbar und damit die Kennzahl für die Ursachenanalyse."),
-        kachel("Retouren nach Wert", pct(q["gesamt_gamma"]),
-               f'{eur(basis.get("warenwert_retourniert"))} von {eur(basis.get("warenwert_versendet"))}',
+        kachel("Retourenquote", pct(rq),
+               f'{num(art_kunde)} von {num(basis.get("artikel_versendet"))} Artikeln',
+               info="Die Standard-Kennzahl: Anteil der zurückgeschickten Artikel an allen "
+                    "versendeten Artikeln, in der Fachsystematik die Beta-Retourenquote. "
+                    "Bezugsgröße ist die Stückzahl, der Warenwert bleibt unberücksichtigt. "
+                    "Je Artikel berechenbar und damit die Kennzahl für die Ursachenanalyse." + abgrenzung),
+        kachel("Retourenquote nach Wert", pct(rq_wert),
+               f'{eur(wert_kunde)} von {eur(basis.get("warenwert_versendet"))}',
                info=wert_info),
-        kachel("Bestellungen mit Retoure", pct(q["gesamt_bestellquote"]),
-               f'{num(basis.get("bestellungen_mit_retoure"))} von {num(basis.get("bestellungen"))} Bestellungen',
+        kachel("Bestellungen mit Retoure", pct(rq_best),
+               f'{num(best_kunde)} von {num(basis.get("bestellungen"))} Bestellungen',
                info="Anteil der Bestellungen mit mindestens einer Retoure. Liegt systembedingt über "
                     "der Beta-Quote, da ein einzelner retournierter Artikel die gesamte Bestellung "
                     "ausweist. Entspricht der Alpha-Quote, die jedoch auf Sendungen bezogen ist."),
